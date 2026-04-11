@@ -1,0 +1,309 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RASU Design System - Futuristic E-commerce
+   Inspired by VEXO Dribbble reference
+   All colors in HSL format
+*/
+
+@layer base {
+  :root {
+    /* Core Backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    
+    /* Card & Popover */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    
+    /* Primary - Slate Blue (VEXO #98AEB3) */
+    --primary: 191 15% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 191 20% 75%;
+    
+    /* Secondary */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 0 0% 10%;
+    
+    /* Accent - Warm Taupe (VEXO #967D6A) */
+    --accent: 26 18% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Muted */
+    --muted: 210 20% 96%;
+    --muted-foreground: 200 5% 45%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 210 16% 90%;
+    --input: 210 16% 90%;
+    --ring: 191 15% 65%;
+    
+    /* Radius */
+    --radius: 0.75rem;
+    
+    /* Glass Effects */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.2;
+    
+    /* Shadows */
+    --shadow-color: 191 15% 65%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 191 15% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 10% 95%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 200 10% 90%;
+    --sidebar-ring: 191 15% 65%;
+  }
+
+  .dark {
+    /* Core Backgrounds - Rich Black */
+    --background: 240 10% 4%;
+    --foreground: 0 0% 96%;
+    
+    /* Card & Popover */
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 96%;
+    
+    /* Primary - Slate Blue */
+    --primary: 191 15% 65%;
+    --primary-foreground: 0 0% 4%;
+    --primary-glow: 191 20% 55%;
+    
+    /* Secondary */
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 0 0% 96%;
+    
+    /* Accent - Warm Taupe */
+    --accent: 26 25% 60%;
+    --accent-foreground: 0 0% 4%;
+    
+    /* Muted */
+    --muted: 240 5% 15%;
+    --muted-foreground: 200 5% 55%;
+    
+    /* Destructive */
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 191 15% 65%;
+    
+    /* Glass Effects */
+    --glass-bg: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+    
+    /* Sidebar */
+    --sidebar-background: 240 10% 6%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 191 15% 65%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 240 5% 12%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 240 5% 15%;
+    --sidebar-ring: 191 15% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Custom Selection */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+@layer components {
+  /* Glass Card */
+  .glass {
+    @apply bg-[hsl(var(--glass-bg))] backdrop-blur-xl border border-[hsl(var(--glass-border))];
+  }
+
+  /* Geometric Lines Overlay */
+  .geometric-lines {
+    background-image: 
+      linear-gradient(to right, hsl(var(--primary) / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--primary) / 0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Glow Effect */
+  .glow {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.3),
+                0 0 80px hsl(var(--primary) / 0.1);
+  }
+
+  .glow-sm {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.2);
+  }
+
+  /* Premium Button Hover */
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .btn-glow::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full;
+    transition: transform 0.6s ease;
+  }
+
+  .btn-glow:hover::before {
+    @apply translate-x-full;
+  }
+
+  /* Text Gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary;
+  }
+
+  /* Animated Underline */
+  .animated-underline {
+    @apply relative;
+  }
+
+  .animated-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-300;
+  }
+
+  .animated-underline:hover::after {
+    @apply w-full;
+  }
+
+  /* Floating Animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Noise Texture Overlay */
+  .noise {
+    @apply pointer-events-none fixed inset-0 z-50 opacity-[0.008];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  /* Letter Spacing */
+  .tracking-ultra-wide {
+    letter-spacing: 0.2em;
+  }
+
+  .tracking-extra-wide {
+    letter-spacing: 0.1em;
+  }
+
+  /* Perspective for 3D effects */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.5);
+  }
+}
+
+@keyframes line-reveal {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite linear;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
