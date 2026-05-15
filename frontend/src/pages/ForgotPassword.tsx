@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Mail, KeyRound, ArrowRight, ShieldCheck, Sparkles, Package, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+import { API_BASE_URL } from "@/lib/api";
 
 type Step = "request" | "reset" | "success";
 

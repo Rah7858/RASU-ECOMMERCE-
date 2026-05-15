@@ -27,7 +27,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+import { API_BASE_URL } from "@/lib/api";
 
 type VerificationChannel = "email" | "phone";
 
