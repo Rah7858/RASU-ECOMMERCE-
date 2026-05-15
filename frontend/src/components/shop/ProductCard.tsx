@@ -153,7 +153,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className="absolute bottom-4 right-4 opacity-20"
             animate={{ opacity: isHovered ? 0.4 : 0.2 }}
           >
-            <img src={rasuLogo} alt="" className="h-6 dark:invert" />
+            <img loading="lazy" src={rasuLogo} alt="" className="h-6 dark:invert" />
           </motion.div>
 
           {/* Badges */}
@@ -231,7 +231,7 @@ export function ProductCard({ product }: ProductCardProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddToCart}
-              className="tap-target w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl flex items-center justify-center gap-2 text-sm relative overflow-hidden"
+              className="tap-target w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl flex items-center justify-center gap-2 text-xs xs:text-sm relative overflow-hidden"
               aria-label={`Add ${translatedName} to cart`}
             >
               <motion.div

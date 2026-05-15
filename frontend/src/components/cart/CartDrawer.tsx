@@ -70,7 +70,7 @@ const CartDrawer = () => {
                     >
                       {/* Image */}
                       <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                        <img
+                        <img loading="lazy"
                           src={item.image}
                           alt={item.name}
                           className="w-full h-full object-cover"

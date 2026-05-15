@@ -16,6 +16,23 @@
     <meta name="twitter:site" content="@RASU" />
 
     <link rel="icon" type="image/svg+xml" href="/placeholder.svg" />
+
+    <!-- Preconnect for external origins -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+
+    <!-- Prevent FOUC: set theme class before React renders -->
+    <script>
+      (function() {
+        var stored = localStorage.getItem('rasu-theme');
+        var theme = stored || 'dark';
+        if (theme === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.classList.add(theme);
+        document.documentElement.style.setProperty('--banner-height', '0px');
+      })();
+    </script>
   </head>
 
   <body>

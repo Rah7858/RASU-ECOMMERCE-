@@ -84,11 +84,11 @@ export default function Cart() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="flex gap-4 bg-card rounded-2xl border border-border/50 p-4"
+                    className="flex flex-col sm:flex-row gap-4 bg-card rounded-2xl border border-border/50 p-4"
                   >
                     {/* Image */}
                     <Link to={`/product/${item.id}`} className="flex-shrink-0">
-                      <img
+                      <img loading="lazy"
                         src={item.image}
                         alt={item.name}
                         className="w-24 h-32 md:w-32 md:h-40 object-cover rounded-xl"
@@ -110,13 +110,13 @@ export default function Cart() {
                       </p>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center justify-between mt-4 w-full">
                         <div className="flex items-center border border-border rounded-lg">
                           <button
                             onClick={() =>
                               updateQuantity(item.id, item.size, item.color, item.quantity - 1)
                             }
-                            className="p-2 hover:bg-muted transition-colors"
+                            className="p-2 hover:bg-muted transition-colors tap-target"
                           >
                             <Minus className="w-4 h-4" />
                           </button>
@@ -125,7 +125,7 @@ export default function Cart() {
                             onClick={() =>
                               updateQuantity(item.id, item.size, item.color, item.quantity + 1)
                             }
-                            className="p-2 hover:bg-muted transition-colors"
+                            className="p-2 hover:bg-muted transition-colors tap-target"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
@@ -133,7 +133,7 @@ export default function Cart() {
 
                         <button
                           onClick={() => removeItem(item.id, item.size, item.color)}
-                          className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                          className="p-2 text-muted-foreground hover:text-destructive transition-colors tap-target"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>

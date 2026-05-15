@@ -235,7 +235,7 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
             className="absolute bottom-4 right-4 opacity-30"
             animate={{ opacity: isHovered ? 0.5 : 0.3 }}
           >
-            <img src={rasuLogo} alt="" className="h-8 dark:invert" />
+            <img loading="lazy" src={rasuLogo} alt="" className="h-8 dark:invert" />
           </motion.div>
 
           {/* Badges with animation */}

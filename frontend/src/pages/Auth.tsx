@@ -1,234 +1,98 @@
-import { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { 
+  Mail, 
+  Lock, 
+  User, 
+  Phone, 
+  Eye, 
+  EyeOff, 
+  CheckCircle2, 
+  ArrowRight,
+  Package,
+  ShieldCheck,
+  Sparkles
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
 
 type AuthTab = "login" | "signup";
 
-interface LoginForm {
-  identifier: string;
-  password: string;
-}
-
-interface SignupForm {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface VerifyForm {
-  channel: "email" | "phone";
-  email: string;
-  phone: string;
-  otp: string;
-  maskedDestination?: string;
-}
-
-interface AuthProps {
-  defaultTab?: AuthTab;
-  isModal?: boolean;
-  onClose?: () => void;
-}
-
-const Auth = ({ defaultTab = "login", isModal = false, onClose }: AuthProps) => {
+export default function Auth({ defaultTab = "login" }: { defaultTab?: AuthTab }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState<AuthTab>(defaultTab);
-  const [loginForm, setLoginForm] = useState<LoginForm>({
-    identifier: "",
-    password: "",
-  });
-  const [signupForm, setSignupForm] = useState<SignupForm>({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [verifyForm, setVerifyForm] = useState<VerifyForm>({
-    channel: "email",
-    email: "",
-    phone: "",
-    otp: "",
-    maskedDestination: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [generalError, setGeneralError] = useState("");
-  const [showVerification, setShowVerification] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotStep, setForgotStep] = useState<"request" | "verify">("request");
-  const [forgotForm, setForgotForm] = useState({
-    emailOrPhone: "",
-    otp: "",
-    newPassword: "",
-    maskedDestination: "",
-  });
-  const [otpChannel, setOtpChannel] = useState<"email" | "phone">("email");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const validateEmail = (value: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  // Forms
+  const [loginForm, setLoginForm] = useState({ identifier: "", password: "", remember: false });
+  const [signupForm, setSignupForm] = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "", agreed: false });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validatePhone = (value: string) => /^[6-9]\d{9}$/.test(value.trim());
+  const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  const validatePhone = (val: string) => /^[6-9]\d{9}$/.test(val.trim());
 
-  const validateOtp = (value: string) => /^\d{6}$/.test(value.trim());
+  const calculatePasswordStrength = (pass: string) => {
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    return score; // 0-4
+  };
 
-  const validateLogin = () => {
+  const strengthScore = calculatePasswordStrength(signupForm.password);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     const newErrors: Record<string, string> = {};
-
-    if (!loginForm.identifier.trim()) {
-      newErrors.identifier = "Email or phone number is required.";
-    } else if (
-      !validateEmail(loginForm.identifier) &&
-      !validatePhone(loginForm.identifier)
-    ) {
-      newErrors.identifier = "Enter a valid email address or 10-digit phone number.";
-    }
-
-    if (!loginForm.password) {
-      newErrors.password = "Password is required.";
-    } else if (loginForm.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
-    }
-
-    return newErrors;
-  };
-
-  const validateSignup = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!signupForm.name.trim()) {
-      newErrors.name = "Full name is required.";
-    }
-
-    if (!signupForm.email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!validateEmail(signupForm.email)) {
-      newErrors.email = "Enter a valid email address.";
-    }
-
-    if (!signupForm.phone.trim()) {
-      newErrors.phone = "Phone number is required.";
-    } else if (!validatePhone(signupForm.phone)) {
-      newErrors.phone = "Enter a valid 10-digit mobile number.";
-    }
-
-    if (!signupForm.password) {
-      newErrors.password = "Password is required.";
-    } else if (signupForm.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
-    }
-
-    if (!signupForm.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password.";
-    } else if (signupForm.password !== signupForm.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
-    }
-
-    return newErrors;
-  };
-
-  const handleApiError = async (response: Response) => {
-    const data = await response.json().catch(() => null);
-    if (Array.isArray(data?.errors) && data.errors.length > 0) {
-      return data.errors[0]?.msg || "Something went wrong. Please try again.";
-    }
-    return data?.message || "Something went wrong. Please try again.";
-  };
-
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const validationErrors = validateLogin();
-    if (Object.keys(validationErrors).length) {
-      setErrors(validationErrors);
-      setGeneralError("");
-      return;
-    }
-
+    if (!loginForm.identifier.trim()) newErrors.identifier = "Email or phone is required";
+    if (!loginForm.password) newErrors.password = "Password is required";
+    if (Object.keys(newErrors).length) return setErrors(newErrors);
+    
     setErrors({});
-    setGeneralError("");
     setIsLoading(true);
-
+    
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailOrPhone: loginForm.identifier,
-          password: loginForm.password,
-        }),
+        body: JSON.stringify({ emailOrPhone: loginForm.identifier, password: loginForm.password }),
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        if (response.status === 403 && payload?.requiresVerification && payload?.email) {
-          setVerifyForm({
-            channel: payload.channel === "phone" ? "phone" : "email",
-            email: payload.email,
-            phone: payload.phone || "",
-            otp: "",
-            maskedDestination: payload.maskedDestination || "",
-          });
-          setShowVerification(true);
-          setGeneralError(payload.message || "Verify your email before logging in.");
-          return;
-        }
-        const errorMessage = payload?.message || "Something went wrong. Please try again.";
-        setGeneralError(
-          errorMessage === "Incorrect email/phone or password"
-            ? "Incorrect email/phone or password. Use 'Forgot password?' if needed."
-            : errorMessage
-        );
-        toast.error(errorMessage);
-        return;
-      }
-
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Login failed");
+
       localStorage.setItem("rasu_user", JSON.stringify(data.user));
       localStorage.setItem("rasu_token", data.token);
       window.dispatchEvent(new Event("rasu-auth-changed"));
-      toast.success("Logged in successfully.");
-      if (onClose) onClose();
-      navigate("/profile");
-    } catch (error) {
-      setGeneralError("Unable to login right now. Please try again later.");
-      toast.error("Unable to login right now. Please try again later.");
+      toast.success("Welcome back!");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrors({ form: err.message });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const validationErrors = validateSignup();
-    if (Object.keys(validationErrors).length) {
-      setErrors(validationErrors);
-      setGeneralError("");
-      return;
-    }
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (signupForm.name.length < 2) newErrors.name = "Name must be at least 2 characters";
+    if (!validateEmail(signupForm.email)) newErrors.email = "Valid email is required";
+    if (!validatePhone(signupForm.phone)) newErrors.phone = "Valid 10-digit phone is required";
+    if (signupForm.password.length < 8 || !/[0-9]/.test(signupForm.password)) newErrors.password = "Min 8 chars with at least 1 number";
+    if (signupForm.password !== signupForm.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!signupForm.agreed) newErrors.agreed = "You must agree to the Terms";
+    
+    if (Object.keys(newErrors).length) return setErrors(newErrors);
 
     setErrors({});
-    setGeneralError("");
     setIsLoading(true);
 
     try {
@@ -239,682 +103,361 @@ const Auth = ({ defaultTab = "login", isModal = false, onClose }: AuthProps) => 
           name: signupForm.name,
           email: signupForm.email,
           phone: signupForm.phone,
-          password: signupForm.password,
-          otpChannel,
+          password: signupForm.password
         }),
       });
 
-      if (!response.ok) {
-        const errorMessage = await handleApiError(response);
-        setGeneralError(errorMessage);
-        toast.error(errorMessage);
-        return;
-      }
-
       const data = await response.json();
-      setVerifyForm({
-        channel: data.channel === "phone" ? "phone" : "email",
-        email: signupForm.email.trim().toLowerCase(),
-        phone: signupForm.phone.trim(),
-        otp: "",
-        maskedDestination: data.maskedDestination || "",
-      });
-      setShowVerification(true);
-      setGeneralError("");
-      toast.success(
-        data.channel === "phone"
-          ? `Verification code sent to ${data.maskedDestination || "your phone"}.`
-          : `Verification code sent to ${data.maskedDestination || "your email"}.`
-      );
-    } catch (error) {
-      setGeneralError("Unable to create account right now. Please try again later.");
-      toast.error("Unable to create account right now. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (!response.ok) throw new Error(data.message || "Registration failed");
 
-  const handleVerifyEmail = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const newErrors: Record<string, string> = {};
-
-    if (verifyForm.channel === "email" && !validateEmail(verifyForm.email)) {
-      newErrors.verifyEmail = "Enter a valid email address.";
-    }
-
-    if (verifyForm.channel === "phone" && !validatePhone(verifyForm.phone)) {
-      newErrors.verifyPhone = "Enter a valid 10-digit mobile number.";
-    }
-
-    if (!validateOtp(verifyForm.otp)) {
-      newErrors.verifyOtp = "Enter the 6-digit verification code.";
-    }
-
-    if (Object.keys(newErrors).length) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
-    setGeneralError("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          channel: verifyForm.channel,
-          email: verifyForm.email,
-          phone: verifyForm.phone,
-          otp: verifyForm.otp,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorMessage = await handleApiError(response);
-        setGeneralError(errorMessage);
-        toast.error(errorMessage);
-        return;
-      }
-
-      const data = await response.json();
       localStorage.setItem("rasu_user", JSON.stringify(data.user));
       localStorage.setItem("rasu_token", data.token);
       window.dispatchEvent(new Event("rasu-auth-changed"));
-      toast.success("Verification completed successfully.");
-      if (onClose) onClose();
-      navigate("/profile");
-    } catch {
-      setGeneralError("Unable to verify email right now. Please try again later.");
-      toast.error("Unable to verify email right now. Please try again later.");
+      toast.success("Account created successfully!");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrors({ form: err.message });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResendVerification = async () => {
-    if (verifyForm.channel === "email" && !validateEmail(verifyForm.email)) {
-      setErrors({ verifyEmail: "Enter a valid email address." });
-      return;
-    }
-
-    if (verifyForm.channel === "phone" && !validatePhone(verifyForm.phone)) {
-      setErrors({ verifyPhone: "Enter a valid 10-digit mobile number." });
-      return;
-    }
-
-    setErrors({});
-    setGeneralError("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          channel: verifyForm.channel,
-          email: verifyForm.email,
-          phone: verifyForm.phone,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorMessage = await handleApiError(response);
-        setGeneralError(errorMessage);
-        toast.error(errorMessage);
-        return;
-      }
-
-      const data = await response.json();
-      setVerifyForm((previous) => ({
-        ...previous,
-        maskedDestination: data.maskedDestination || previous.maskedDestination,
-      }));
-      toast.success(
-        data.channel === "phone"
-          ? `Verification code sent to ${data.maskedDestination || "your phone"}.`
-          : `Verification code sent to ${data.maskedDestination || "your email"}.`
-      );
-    } catch {
-      setGeneralError("Unable to resend verification code right now.");
-      toast.error("Unable to resend verification code right now.");
-    } finally {
-      setIsLoading(false);
-    }
+  const formVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut", staggerChildren: 0.1 } }
   };
 
-  const requestResetCode = async () => {
-    const identifier = forgotForm.emailOrPhone.trim();
-    if (!identifier) {
-      setErrors({ forgotIdentifier: "Email or phone is required." });
-      return;
-    }
-    if (!validateEmail(identifier) && !validatePhone(identifier)) {
-      setErrors({ forgotIdentifier: "Enter a valid email address or 10-digit phone number." });
-      return;
-    }
-    setErrors({});
-    setGeneralError("");
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailOrPhone: identifier }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message || "Failed to send reset code");
-      if (!data?.maskedDestination) {
-        throw new Error("No account found with this email or phone");
-      }
-      setForgotForm((prev) => ({ ...prev, maskedDestination: data.maskedDestination || "" }));
-      setForgotStep("verify");
-      toast.success(`Reset code sent to ${data.maskedDestination || "your email"}.`);
-    } catch (error) {
-      setGeneralError(error instanceof Error ? error.message : "Failed to send reset code");
-    } finally {
-      setIsLoading(false);
-    }
+  const inputVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
   };
-
-  const handleForgotPasswordRequest = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    await requestResetCode();
-  };
-
-  const handleForgotPasswordReset = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const newErrors: Record<string, string> = {};
-    if (!validateOtp(forgotForm.otp)) newErrors.forgotOtp = "Enter the 6-digit reset code.";
-    if (!forgotForm.newPassword || forgotForm.newPassword.length < 6)
-      newErrors.forgotPassword = "Password must be at least 6 characters.";
-    if (Object.keys(newErrors).length) {
-      setErrors(newErrors);
-      return;
-    }
-    setErrors({});
-    setGeneralError("");
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailOrPhone: forgotForm.emailOrPhone.trim(),
-          otp: forgotForm.otp.trim(),
-          newPassword: forgotForm.newPassword,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message || "Failed to reset password");
-      toast.success("Password reset successfully. Please log in.");
-      setShowForgotPassword(false);
-      setForgotStep("request");
-      setForgotForm({ emailOrPhone: "", otp: "", newPassword: "", maskedDestination: "" });
-      setGeneralError("");
-      setErrors({});
-      setTab("login");
-    } catch (error) {
-      setGeneralError(error instanceof Error ? error.message : "Failed to reset password");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginButtonLabel = useMemo(
-    () => (isLoading ? "Logging in..." : "Login"),
-    [isLoading]
-  );
-
-  const signupButtonLabel = useMemo(
-    () => (isLoading ? "Creating account..." : "Create Account"),
-    [isLoading]
-  );
-
-  const verifyButtonLabel = useMemo(
-    () => (isLoading ? "Verifying..." : "Verify OTP"),
-    [isLoading]
-  );
-
-  const containerClass = isModal ? "w-full max-w-md" : "min-h-screen flex items-center justify-center p-4";
 
   return (
-    <div className={containerClass}>
-      <div className="w-full max-w-md">
-        {!isModal && (
-          <Button variant="ghost" onClick={() => navigate("/") }>
-            Back to Home
-          </Button>
-        )}
+    <div className="min-h-screen flex w-full bg-black text-white selection:bg-white selection:text-black">
+      {/* LEFT: Brand Panel (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between p-12 lg:p-24 border-r border-white/10">
+        {/* Mesh Gradient Background */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-white/5 blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-white/5 blur-[100px]" />
+        </div>
 
-        <Card className="mt-4">
-          <CardHeader className="text-center">
-            <CardTitle>Welcome to RASU</CardTitle>
-            <CardDescription>
-              {showForgotPassword
-                ? forgotStep === "request"
-                  ? "Enter your email or phone to receive a password reset code."
-                  : `Reset code sent to ${forgotForm.maskedDestination || "your email"}. Enter it below.`
-                : showVerification
-                ? `Enter the OTP sent to ${verifyForm.maskedDestination || (verifyForm.channel === "phone" ? "your phone" : "your email")} to activate your account.`
-                : "Sign in if you already have an account, or create a new account."}
-            </CardDescription>
-          </CardHeader>
+        <div className="relative z-10 flex flex-col items-start gap-2">
+          <h1 className="text-4xl font-black tracking-tighter cursor-pointer" onClick={() => navigate("/")}>RASU.</h1>
+          <p className="text-white/60 tracking-widest text-sm font-medium uppercase">Define Your Future</p>
+        </div>
 
-          <CardContent>
-            {showForgotPassword ? (
-              <div className="space-y-4">
-                {forgotStep === "request" ? (
-                  <form onSubmit={handleForgotPasswordRequest} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="forgot-identifier">Email or Phone Number</Label>
-                      <Input
-                        id="forgot-identifier"
-                        type="text"
-                        placeholder="name@example.com or 9876543210"
-                        value={forgotForm.emailOrPhone}
-                        onChange={(e) => setForgotForm({ ...forgotForm, emailOrPhone: e.target.value })}
-                      />
-                      {errors.forgotIdentifier && (
-                        <p className="text-sm text-destructive">{errors.forgotIdentifier}</p>
-                      )}
-                    </div>
-                    {generalError && <p className="text-sm text-destructive">{generalError}</p>}
-                    <Button className="w-full" type="submit" disabled={isLoading}>
-                      {isLoading ? "Sending..." : "Send Reset Code"}
-                    </Button>
-                    <Button
-                      className="w-full"
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setGeneralError("");
-                        setErrors({});
-                      }}
-                    >
-                      Back to Login
-                    </Button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleForgotPasswordReset} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="forgot-otp">Reset Code</Label>
-                      <Input
-                        id="forgot-otp"
-                        inputMode="numeric"
-                        maxLength={6}
-                        placeholder="Enter 6-digit code"
-                        value={forgotForm.otp}
-                        onChange={(e) => setForgotForm({ ...forgotForm, otp: e.target.value.replace(/\D/g, "") })}
-                      />
-                      {errors.forgotOtp && <p className="text-sm text-destructive">{errors.forgotOtp}</p>}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="forgot-new-password">New Password</Label>
-                      <Input
-                        id="forgot-new-password"
-                        type="password"
-                        placeholder="Min. 6 characters"
-                        value={forgotForm.newPassword}
-                        onChange={(e) => setForgotForm({ ...forgotForm, newPassword: e.target.value })}
-                      />
-                      {errors.forgotPassword && <p className="text-sm text-destructive">{errors.forgotPassword}</p>}
-                    </div>
-                    {generalError && <p className="text-sm text-destructive">{generalError}</p>}
-                    <Button className="w-full" type="submit" disabled={isLoading}>
-                      {isLoading ? "Resetting..." : "Reset Password"}
-                    </Button>
-                    <Button
-                      className="w-full"
-                      type="button"
-                      variant="outline"
-                      onClick={requestResetCode}
-                      disabled={isLoading}
-                    >
-                      Resend Code
-                    </Button>
-                    <Button
-                      className="w-full"
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setForgotStep("request");
-                        setForgotForm({ emailOrPhone: "", otp: "", newPassword: "", maskedDestination: "" });
-                        setGeneralError("");
-                        setErrors({});
-                      }}
-                    >
-                      Back to Login
-                    </Button>
-                  </form>
-                )}
-              </div>
-            ) : showVerification ? (
-              <form onSubmit={handleVerifyEmail} className="space-y-4">
-                {verifyForm.channel === "email" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="verify-email">Email</Label>
-                    <Input
-                      id="verify-email"
-                      type="email"
-                      value={verifyForm.email}
-                      onChange={(event) =>
-                        setVerifyForm({
-                          ...verifyForm,
-                          email: event.target.value,
-                        })
-                      }
-                    />
-                    {errors.verifyEmail && (
-                      <p className="text-sm text-destructive">{errors.verifyEmail}</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="verify-phone">Phone Number</Label>
-                    <Input
-                      id="verify-phone"
-                      inputMode="numeric"
-                      maxLength={10}
-                      value={verifyForm.phone}
-                      onChange={(event) =>
-                        setVerifyForm({
-                          ...verifyForm,
-                          phone: event.target.value.replace(/\D/g, ""),
-                        })
-                      }
-                    />
-                    {errors.verifyPhone && (
-                      <p className="text-sm text-destructive">{errors.verifyPhone}</p>
-                    )}
-                  </div>
-                )}
+        <div className="relative z-10 space-y-8 mt-12">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Exclusive drops, first access</h3>
+              <p className="text-white/60 text-sm">Join the community to unlock limited edition apparel.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Track orders in real-time</h3>
+              <p className="text-white/60 text-sm">Full transparency from the warehouse to your doorstep.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Secure JWT authentication</h3>
+              <p className="text-white/60 text-sm">Your data is encrypted and completely secure.</p>
+            </div>
+          </div>
+        </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="verify-otp">Verification Code</Label>
-                  <Input
-                    id="verify-otp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter 6-digit code"
-                    value={verifyForm.otp}
-                    onChange={(event) =>
-                      setVerifyForm({
-                        ...verifyForm,
-                        otp: event.target.value.replace(/\D/g, ""),
-                      })
-                    }
-                  />
-                  {errors.verifyOtp && (
-                    <p className="text-sm text-destructive">{errors.verifyOtp}</p>
-                  )}
+        <div className="relative z-10">
+          {tab === "login" ? (
+            <button onClick={() => setTab("signup")} className="group flex items-center gap-2 text-white/60 hover:text-white transition-colors duration-300">
+              New here? Create account
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          ) : (
+            <button onClick={() => setTab("login")} className="group flex items-center gap-2 text-white/60 hover:text-white transition-colors duration-300">
+              Already have an account? Sign in
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT: Form Panel */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-12 lg:p-24 relative overflow-y-auto">
+        
+        {/* Mobile Header (Hidden on Desktop) */}
+        <div className="absolute top-8 left-6 lg:hidden flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+          <h1 className="text-2xl font-black tracking-tighter">RASU.</h1>
+        </div>
+
+        <div className="w-full max-w-md pt-20 lg:pt-0">
+          <AnimatePresence mode="wait">
+            {tab === "login" && (
+              <motion.form 
+                key="login-form"
+                variants={formVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                onSubmit={handleLogin}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-3xl md:text-[2rem] font-black tracking-tight mb-2">Welcome Back</h2>
+                  <p className="text-white/50">Sign in to your RASU account</p>
                 </div>
 
-                {generalError && (
-                  <p className="text-sm text-destructive">{generalError}</p>
+                <div className="space-y-4">
+                  <motion.div variants={inputVariants} className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      placeholder="Email or Phone" 
+                      value={loginForm.identifier}
+                      onChange={(e) => setLoginForm({ ...loginForm, identifier: e.target.value })}
+                      error={!!errors.identifier}
+                    />
+                    {errors.identifier && <span className="text-red-500 text-xs mt-1 block">{errors.identifier}</span>}
+                  </motion.div>
+
+                  <motion.div variants={inputVariants} className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password" 
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      error={!!errors.password}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                    {errors.password && <span className="text-red-500 text-xs mt-1 block">{errors.password}</span>}
+                  </motion.div>
+
+                  <motion.div variants={inputVariants} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                    <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer hover:text-white transition-colors">
+                      <input type="checkbox" checked={loginForm.remember} onChange={(e) => setLoginForm({ ...loginForm, remember: e.target.checked })} className="rounded border-white/20 bg-white/5 accent-white w-4 h-4" />
+                      Remember me
+                    </label>
+                    <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm text-white/60 hover:text-white transition-colors">
+                      Forgot Password?
+                    </button>
+                  </motion.div>
+                </div>
+
+                {errors.form && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                    {errors.form}
+                  </motion.div>
                 )}
 
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {verifyButtonLabel}
-                </Button>
-
-                <Button
-                  className="w-full"
-                  type="button"
-                  variant="outline"
-                  onClick={handleResendVerification}
-                  disabled={isLoading}
-                >
-                  Resend Code
-                </Button>
-
-                <Button
-                  className="w-full"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setShowVerification(false);
-                    setGeneralError("");
-                    setErrors({});
-                    setVerifyForm({
-                      channel: "email",
-                      email: "",
-                      phone: "",
-                      otp: "",
-                      maskedDestination: "",
-                    });
-                  }}
-                >
-                  Back
-                </Button>
-              </form>
-            ) : (
-            <Tabs value={tab} onValueChange={(value) => {
-              setTab(value as AuthTab);
-              setErrors({});
-              setGeneralError("");
-            }}>
-              <TabsList className="grid grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-identifier">Email or Phone Number</Label>
-                    <Input
-                      id="login-identifier"
-                      type="text"
-                      placeholder="name@example.com or 9876543210"
-                      value={loginForm.identifier}
-                      onChange={(event) =>
-                        setLoginForm({
-                          ...loginForm,
-                          identifier: event.target.value,
-                        })
-                      }
-                    />
-                    {errors.identifier && (
-                      <p className="text-sm text-destructive">{errors.identifier}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={loginForm.password}
-                      onChange={(event) =>
-                        setLoginForm({
-                          ...loginForm,
-                          password: event.target.value,
-                        })
-                      }
-                    />
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
-                    )}
-                  </div>
-
-                  {generalError && (
-                    <p className="text-sm text-destructive">{generalError}</p>
-                  )}
-
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {loginButtonLabel}
+                <motion.div variants={inputVariants}>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full h-[52px] rounded-xl bg-white text-black hover:bg-white/90 font-bold text-base transition-all duration-300 relative overflow-hidden group"
+                  >
+                    {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
+                </motion.div>
 
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-                      onClick={() => {
-                        setShowForgotPassword(true);
-                        setForgotStep("request");
-                        setForgotForm({
-                          emailOrPhone: loginForm.identifier,
-                          otp: "",
-                          newPassword: "",
-                          maskedDestination: "",
-                        });
-                        setGeneralError("");
-                        setErrors({});
-                      }}
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                </form>
-              </TabsContent>
+                <motion.div variants={inputVariants} className="relative my-8">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                  <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-black px-2 text-white/40">Or continue with</span></div>
+                </motion.div>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      placeholder="Your name"
+                <motion.div variants={inputVariants}>
+                  <Button type="button" variant="outline" className="w-full h-[52px] rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium" disabled>
+                    Google OAuth (Coming Soon)
+                  </Button>
+                </motion.div>
+
+                <motion.div variants={inputVariants} className="lg:hidden text-center mt-8">
+                  <button onClick={() => setTab("signup")} className="text-sm text-white/60 hover:text-white">
+                    New here? Create account
+                  </button>
+                </motion.div>
+              </motion.form>
+            )}
+
+            {tab === "signup" && (
+              <motion.form 
+                key="signup-form"
+                variants={formVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                onSubmit={handleSignup}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-3xl md:text-[2rem] font-black tracking-tight mb-2">Create Account</h2>
+                  <p className="text-white/50">Join the future of fashion</p>
+                </div>
+
+                <div className="space-y-4">
+                  <motion.div variants={inputVariants} className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      placeholder="Full Name" 
                       value={signupForm.name}
-                      onChange={(event) =>
-                        setSignupForm({
-                          ...signupForm,
-                          name: event.target.value,
-                        })
-                      }
+                      onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                      error={!!errors.name}
                     />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
-                  </div>
+                    {errors.name && <span className="text-red-500 text-xs mt-1 block">{errors.name}</span>}
+                  </motion.div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
+                  <motion.div variants={inputVariants} className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      placeholder="Email Address" 
                       type="email"
-                      placeholder="name@example.com"
                       value={signupForm.email}
-                      onChange={(event) =>
-                        setSignupForm({
-                          ...signupForm,
-                          email: event.target.value,
-                        })
-                      }
+                      onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                      error={!!errors.email}
                     />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
+                    {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email}</span>}
+                  </motion.div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number</Label>
-                    <Input
-                      id="signup-phone"
-                      type="tel"
+                  <motion.div variants={inputVariants} className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      placeholder="Phone Number (10 digits)" 
                       inputMode="numeric"
                       maxLength={10}
-                      placeholder="9876543210"
                       value={signupForm.phone}
-                      onChange={(event) =>
-                        setSignupForm({
-                          ...signupForm,
-                          phone: event.target.value.replace(/\D/g, ""),
-                        })
-                      }
+                      onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value.replace(/\D/g, '') })}
+                      error={!!errors.phone}
                     />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    )}
-                  </div>
+                    {errors.phone && <span className="text-red-500 text-xs mt-1 block">{errors.phone}</span>}
+                  </motion.div>
 
-                  <div className="space-y-2">
-                    <Label>Get OTP On</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        type="button"
-                        variant={otpChannel === "email" ? "default" : "outline"}
-                        onClick={() => setOtpChannel("email")}
-                      >
-                        Gmail
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={otpChannel === "phone" ? "default" : "outline"}
-                        onClick={() => setOtpChannel("phone")}
-                      >
-                        Phone
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {otpChannel === "phone"
-                        ? "Phone OTP needs SMS provider setup on backend."
-                        : "OTP will be sent to your email inbox."}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Enter your password"
+                  <motion.div variants={inputVariants} className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password" 
                       value={signupForm.password}
-                      onChange={(event) =>
-                        setSignupForm({
-                          ...signupForm,
-                          password: event.target.value,
-                        })
-                      }
+                      onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                      error={!!errors.password}
                     />
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                    {errors.password && <span className="text-red-500 text-xs mt-1 block">{errors.password}</span>}
+                    
+                    {/* Password Strength Indicator */}
+                    {signupForm.password.length > 0 && (
+                      <div className="flex gap-1 mt-2">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div 
+                            key={level} 
+                            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                              strengthScore >= level 
+                                ? strengthScore < 2 ? 'bg-red-500' : strengthScore < 4 ? 'bg-yellow-500' : 'bg-green-500'
+                                : 'bg-white/10'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     )}
-                  </div>
+                  </motion.div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                    <Input
-                      id="signup-confirm-password"
-                      type="password"
-                      placeholder="Confirm your password"
+                  <motion.div variants={inputVariants} className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input 
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm Password" 
                       value={signupForm.confirmPassword}
-                      onChange={(event) =>
-                        setSignupForm({
-                          ...signupForm,
-                          confirmPassword: event.target.value,
-                        })
-                      }
+                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                      error={!!errors.confirmPassword}
                     />
-                    {errors.confirmPassword && (
-                      <p className="text-sm text-destructive">
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
+                    <button 
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                    {errors.confirmPassword && <span className="text-red-500 text-xs mt-1 block">{errors.confirmPassword}</span>}
+                  </motion.div>
 
-                  {generalError && (
-                    <p className="text-sm text-destructive">{generalError}</p>
-                  )}
+                  <motion.div variants={inputVariants} className="flex items-start gap-2 mt-2">
+                    <input 
+                      type="checkbox" 
+                      id="terms"
+                      checked={signupForm.agreed} 
+                      onChange={(e) => setSignupForm({ ...signupForm, agreed: e.target.checked })} 
+                      className="mt-1 rounded border-white/20 bg-white/5 accent-white w-4 h-4 cursor-pointer" 
+                    />
+                    <label htmlFor="terms" className="text-sm text-white/60 cursor-pointer hover:text-white transition-colors leading-tight">
+                      I agree to the Terms of Service and Privacy Policy
+                    </label>
+                  </motion.div>
+                  {errors.agreed && <span className="text-red-500 text-xs block">{errors.agreed}</span>}
+                </div>
 
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {signupButtonLabel}
+                {errors.form && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                    {errors.form}
+                  </motion.div>
+                )}
+
+                <motion.div variants={inputVariants}>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || !signupForm.agreed}
+                    className="w-full h-[52px] rounded-xl bg-white text-black hover:bg-white/90 font-bold text-base transition-all duration-300 disabled:opacity-50"
+                  >
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                </motion.div>
+
+                <motion.div variants={inputVariants} className="lg:hidden text-center mt-8">
+                  <button type="button" onClick={() => setTab("login")} className="text-sm text-white/60 hover:text-white">
+                    Already have an account? Sign in
+                  </button>
+                </motion.div>
+              </motion.form>
             )}
-          </CardContent>
-        </Card>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
-};
+}
 
-export default Auth;
+// Sub-component for the Custom Input to keep it clean
+const Input = ({ error, className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) => (
+  <input
+    {...props}
+    className={`
+      w-full h-[52px] pl-12 pr-12 rounded-xl text-white
+      bg-white/5 border 
+      ${error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-white/40 focus:ring-white/10'}
+      focus:outline-none focus:ring-4
+      placeholder:text-white/30
+      transition-all duration-300
+      ${className}
+    `}
+  />
+);

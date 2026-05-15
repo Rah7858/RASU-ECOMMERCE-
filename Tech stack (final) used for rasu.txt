@@ -1,0 +1,21 @@
+Tech stack (final):
+
+Frontend: React.js (with Vite), React Router, Axios, Context API (or Redux), Tailwind CSS (optional, you can style yourself).
+
+Backend (Node): Node.js, Express.js, MongoDB (Mongoose), JWT, bcrypt, express-validator (or Joi), Socket.io (for chat).
+
+Database: MongoDB (Atlas or local).
+
+Python Service: FastAPI or Flask to handle AI image generation (or just call an external AI API).
+
+Other:
+
+Payment gateway (Stripe demo integration).
+
+3D model viewer with <model-viewer> or three.js.
+
+Language selection with react-i18next (Hindi/English, more later).
+
+Production configs via .env.
+
+2. Folder Structure (copy this

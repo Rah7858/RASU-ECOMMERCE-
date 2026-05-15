@@ -124,6 +124,7 @@
 @layer base {
   * {
     @apply border-border;
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
   }
 
   html {
@@ -136,11 +137,21 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     overflow-x: hidden;
+    width: 100%;
+    position: relative;
   }
 
   #root {
     min-height: 100vh;
     overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Ensure media elements don't cause overflow */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
   }
 
   /* Custom Selection */

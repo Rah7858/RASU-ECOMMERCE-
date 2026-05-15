@@ -19,6 +19,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        "xs": "400px",
+      },
       fontFamily: {
         sans: ["Satoshi", "system-ui", "sans-serif"],
       },

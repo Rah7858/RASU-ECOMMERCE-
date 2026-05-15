@@ -289,7 +289,7 @@ const ProductReviews = ({ productId, productName, averageRating }: ProductReview
                 <div className="flex flex-wrap gap-2">
                   {uploadedImages.map((img, index) => (
                     <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden group">
-                      <img
+                      <img loading="lazy"
                         src={img}
                         alt={`Upload ${index + 1}`}
                         className="w-full h-full object-cover"
@@ -439,7 +439,7 @@ const ProductReviews = ({ productId, productName, averageRating }: ProductReview
                           onClick={() => setImagePreviewOpen(img)}
                           className="w-16 h-16 rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
                         >
-                          <img
+                          <img loading="lazy"
                             src={img}
                             alt={`Review image ${imgIndex + 1}`}
                             className="w-full h-full object-cover"
@@ -490,7 +490,7 @@ const ProductReviews = ({ productId, productName, averageRating }: ProductReview
       <Dialog open={!!imagePreviewOpen} onOpenChange={() => setImagePreviewOpen(null)}>
         <DialogContent className="sm:max-w-2xl p-2">
           {imagePreviewOpen && (
-            <img
+            <img loading="lazy"
               src={imagePreviewOpen}
               alt="Review image preview"
               className="w-full h-auto rounded-lg"

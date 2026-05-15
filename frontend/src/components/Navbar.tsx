@@ -8,7 +8,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import Auth from "@/pages/Auth";
+
 
 // Magnetic effect hook
 function useMagnetic(strength = 0.3) {
@@ -37,7 +37,6 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,9 +52,6 @@ export function Navbar() {
     { name: t("nav.men"), href: "/shop?category=men" },
     { name: t("nav.women"), href: "/shop?category=women" },
     { name: t("nav.trending"), href: "/shop?category=trending" },
-  ];
-
-  const rightLinks = [
     { name: t("nav.accessories"), href: "/shop?category=accessories" },
   ];
 
@@ -95,7 +91,8 @@ export function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 right-0 z-50"
+        className="fixed left-0 right-0 z-50"
+        style={{ top: "var(--banner-height, 0px)" }}
       >
         {/* Background blur layer with dynamic blur */}
         <motion.div
@@ -104,11 +101,11 @@ export function Navbar() {
             backdropFilter: `blur(${navBlur}px)`,
             WebkitBackdropFilter: `blur(${navBlur}px)`,
           }}
-          className="absolute inset-0 bg-background/80 backdrop-blur-2xl border-b border-border/30 shadow-sm"
+          className="absolute inset-0 bg-black/40 backdrop-blur-xl border-b border-white/10 shadow-sm"
         />
 
         <div className="relative container mx-auto px-4 md:px-6 lg:px-8">
-          <nav className="relative flex items-center justify-between h-20 md:h-24">
+          <nav className="relative flex items-center justify-between h-16 sm:h-20 md:h-24 px-1 sm:px-4">
             {/* Left Navigation with staggered animation */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -183,9 +180,9 @@ export function Navbar() {
                   className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-6 rounded-b-2xl hidden md:block origin-center bg-foreground/8 border border-foreground/15 backdrop-blur dark:bg-card/70 dark:border-border/40"
                 />
 
-                <div className="relative z-10 flex items-center gap-3 text-foreground font-bold tracking-[0.2em] text-lg md:text-2xl">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-foreground/10 dark:bg-primary/20 dark:text-primary dark:ring-primary/30">R</span>
-                  RASU
+                <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 text-foreground font-bold tracking-[0.05em] sm:tracking-[0.2em] text-base sm:text-xl md:text-2xl overflow-hidden">
+                  <span className="flex-shrink-0 inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-foreground/10 dark:bg-primary/20 dark:text-primary dark:ring-primary/30 text-sm sm:text-base">R</span>
+                  <span className="truncate hidden xs:inline-block">RASU</span>
                 </div>
               </motion.div>
             </Link>
@@ -197,12 +194,6 @@ export function Navbar() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex items-center gap-3 md:gap-6"
             >
-              {/* Desktop Accessories Link */}
-              <div className="hidden lg:flex items-center gap-10 mr-4">
-                {rightLinks.map((link, index) => (
-                  <NavLink key={link.name} link={link} index={index + 4} />
-                ))}
-              </div>
 
               {/* Action Icons with staggered animation */}
               <div className="flex items-center gap-1 md:gap-2">
@@ -211,20 +202,21 @@ export function Navbar() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
+                  className="hidden sm:block"
                 >
                   <motion.button
                     onClick={() => setIsSearchOpen(true)}
                     aria-label="Search"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
+                    className="relative p-2 sm:p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
                   >
-                    <Search className="w-5 h-5" />
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   </motion.button>
                 </motion.div>
 
                 {[
-                  { icon: Heart, label: "Wishlist", href: "/wishlist", badge: wishlistCount > 0 ? String(wishlistCount) : undefined },
+                  { icon: Heart, label: "Wishlist", href: "/wishlist", badge: wishlistCount > 0 ? String(wishlistCount) : undefined, hideOnMobile: true },
                   { icon: ShoppingBag, label: "Cart", href: "/cart", badge: totalItems > 0 ? String(totalItems) : undefined },
                 ].map((item, index) => (
                   <motion.div
@@ -232,6 +224,7 @@ export function Navbar() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 + index * 0.1 }}
+                    className={item.hideOnMobile ? "hidden sm:block" : ""}
                   >
                     <IconButton {...item} />
                   </motion.div>
@@ -249,11 +242,11 @@ export function Navbar() {
                       if (isAuthenticated) {
                         navigate("/profile");
                       } else {
-                        setIsAuthDialogOpen(true);
+                        navigate("/login");
                       }
                     }}
                     aria-label="Account"
-                    className="relative p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
+                    className="relative p-2 sm:p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
                   >
                     <User className="w-5 h-5" />
                   </button>
@@ -270,7 +263,7 @@ export function Navbar() {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.75, type: "spring" }}
-                  className="hidden md:block"
+                  className="hidden lg:block"
                 >
                   <LanguageSelector variant="navbar" />
                 </motion.div>
@@ -285,15 +278,6 @@ export function Navbar() {
               </div>
             </motion.div>
           </nav>
-
-          {isAuthDialogOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4 py-8">
-              <div className="absolute inset-0" onClick={() => setIsAuthDialogOpen(false)} />
-              <div className="relative w-full max-w-md">
-                <Auth isModal onClose={() => setIsAuthDialogOpen(false)} />
-              </div>
-            </div>
-          )}
         </div>
       </motion.header>
 
@@ -324,7 +308,7 @@ export function Navbar() {
               transition={{ duration: 0.3, delay: 0.1 }}
               className="relative h-full flex flex-col items-center justify-center gap-8 p-8"
             >
-              {[...navLinks, ...rightLinks].map((link, index) => (
+              {navLinks.map((link, index) => (
                 <motion.div
                   key={link.name}
                   initial={{ opacity: 0, y: 50, scale: 0.9 }}

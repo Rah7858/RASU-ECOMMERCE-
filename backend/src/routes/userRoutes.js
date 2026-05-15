@@ -228,4 +228,78 @@ router.delete('/upload', authenticateToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// Wishlist Routes
+// ==========================================
+
+router.get('/wishlist', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('wishlist');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    return res.json({ wishlist: user.wishlist || [] });
+  } catch (error) {
+    console.error('Get wishlist error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post(
+  '/wishlist',
+  authenticateToken,
+  [body('productId').notEmpty().withMessage('Product ID is required')],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: errors.array()[0]?.msg || 'Invalid request',
+          errors: errors.array(),
+        });
+      }
+
+      const { productId } = req.body;
+      const stringId = String(productId);
+
+      const user = await User.findById(req.user.userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      if (!user.wishlist) user.wishlist = [];
+
+      if (user.wishlist.includes(stringId)) {
+        return res.status(200).json({ message: 'Already in wishlist', wishlist: user.wishlist });
+      }
+
+      user.wishlist.push(stringId);
+      await user.save();
+
+      return res.status(201).json({ message: 'Added to wishlist', wishlist: user.wishlist });
+    } catch (error) {
+      console.error('Add to wishlist error:', error);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
+router.delete('/wishlist/:productId', authenticateToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const stringId = String(productId);
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user.wishlist) user.wishlist = [];
+
+    user.wishlist = user.wishlist.filter((id) => id !== stringId);
+    await user.save();
+
+    return res.json({ message: 'Removed from wishlist', wishlist: user.wishlist });
+  } catch (error) {
+    console.error('Remove from wishlist error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
+

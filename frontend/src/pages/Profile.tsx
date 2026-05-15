@@ -385,7 +385,7 @@ const Profile = () => {
             </Button>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card className="lg:col-span-1">
               <CardHeader>
                 <CardTitle>Profile Photo</CardTitle>
@@ -395,7 +395,7 @@ const Profile = () => {
                 <div className="relative">
                   <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted">
                     {profile.profileImage ? (
-                      <img
+                      <img loading="lazy"
                         src={profile.profileImage.startsWith('/uploads') ? `${API_BASE_URL}${profile.profileImage}` : profile.profileImage}
                         alt="Avatar"
                         className="h-full w-full object-cover"
@@ -528,7 +528,7 @@ const Profile = () => {
             </Card>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -659,7 +659,7 @@ const Profile = () => {
                         <p className="text-sm font-medium">Order ID: {order._id.slice(-8).toUpperCase()}</p>
                         <p className="text-xs text-muted-foreground">Placed on {formatDate(order.createdAt)}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="secondary">{order.status}</Badge>
                         <Badge>₹{order.totalAmount}</Badge>
                         <Badge variant="outline" className="flex items-center gap-1">

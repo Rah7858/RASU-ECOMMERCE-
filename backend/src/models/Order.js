@@ -1,4 +1,3 @@
-// backend/src/models/Order.js
 const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema({
@@ -35,6 +34,14 @@ const shippingAddressSchema = new mongoose.Schema({
   pincode: String,
 });
 
+const statusHistorySchema = new mongoose.Schema({
+  status: { type: String, required: true },
+  description: { type: String, default: "" },
+  location: { type: String, default: "" },
+  timestamp: { type: Date, default: Date.now },
+  updatedBy: { type: String, default: "system" },
+});
+
 const orderSchema = new mongoose.Schema(
   {
     userId: {
@@ -47,6 +54,7 @@ const orderSchema = new mongoose.Schema(
     phone: String,
     paymentMethod: {
       type: String,
+      enum: ["COD", "RAZORPAY", "UPI"],
       default: "COD",
     },
     totalAmount: {
@@ -66,8 +74,37 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "Pending",
     },
+    razorpayOrderId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      sparse: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["PENDING", "PROCESSING", "PAID", "FAILED", "REFUNDED"],
+      default: "PENDING",
+    },
+    trackingNumber: {
+      type: String,
+      default: "",
+    },
+    carrierName: {
+      type: String,
+      default: "",
+    },
+    estimatedDelivery: {
+      type: Date,
+    },
+    statusHistory: [statusHistorySchema],
   },
   { timestamps: true }
 );
 
+orderSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Order", orderSchema);
+

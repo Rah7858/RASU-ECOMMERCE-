@@ -567,7 +567,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                             className="flex items-center gap-3 cursor-pointer p-2 group"
                           >
                             <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <img
+                              <img loading="lazy"
                                 src={product.image}
                                 alt={product.name}
                                 className="w-full h-full object-cover"

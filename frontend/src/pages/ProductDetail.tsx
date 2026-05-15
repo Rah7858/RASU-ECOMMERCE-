@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Share2, Star, Minus, Plus, ShoppingBag, Check, Truck, Shield, RotateCcw } from 'lucide-react';
+import { Heart, Share2, Star, Minus, Plus, ShoppingBag, Check, Truck, Shield, RotateCcw, Sparkles } from 'lucide-react';
 import { products } from '@/data/products';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,8 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ProductCard } from '@/components/shop/ProductCard';
 import ProductReviews from '@/components/shop/ProductReviews';
+import { AISizeRecommender } from '@/components/ai/AISizeRecommender';
+import { AIOutfitBuilder } from '@/components/ai/AIOutfitBuilder';
 
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const colors = [
@@ -34,6 +36,7 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
 
   // Product images - same image, different views
   const productImages = product ? [product.image] : [];
@@ -137,7 +140,7 @@ const ProductDetail = () => {
                 animate={{ opacity: 1 }}
                 className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden"
               >
-                <img
+                <img loading="lazy"
                   src={productImages[selectedImage]}
                   alt={product.name}
                   className="w-full h-full object-cover"
@@ -157,7 +160,7 @@ const ProductDetail = () => {
                           : 'border-transparent hover:border-muted-foreground/30'
                       }`}
                     >
-                      <img
+                      <img loading="lazy"
                         src={img}
                         alt={`${product.name} view ${index + 1}`}
                         className="w-full h-full object-cover"
@@ -242,6 +245,15 @@ const ProductDetail = () => {
 
               {/* Size Selection */}
               <div>
+                {/* AI Size Recommender trigger */}
+                <button
+                  onClick={() => setIsSizeModalOpen(true)}
+                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors mb-3 group"
+                >
+                  <Sparkles className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  🤖 Find My Size
+                </button>
+
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-medium">
                     Size: <span className="text-muted-foreground">{selectedSize || 'Select'}</span>
@@ -386,7 +398,26 @@ const ProductDetail = () => {
               </Tabs>
             </div>
           </div>
+
+          {/* AI Outfit Builder – Feature 3 */}
+          <AIOutfitBuilder
+            productId={product.id}
+            productName={product.name}
+            productCategory={product.category}
+            productSubcategory={product.subcategory}
+            productGender={product.category === 'women' ? 'women' : 'men'}
+            productPrice={product.price}
+          />
         </section>
+
+        {/* AI Size Recommender Modal – Feature 2 */}
+        <AISizeRecommender
+          isOpen={isSizeModalOpen}
+          onClose={() => setIsSizeModalOpen(false)}
+          onSelectSize={(size) => setSelectedSize(size)}
+          productName={product.name}
+          productCategory={product.category}
+        />
 
         {/* Reviews Section */}
         <section className="border-t border-border py-16">

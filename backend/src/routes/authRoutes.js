@@ -127,7 +127,7 @@ router.post(
         user.email = lowerEmail;
         user.phone = normalizedPhone;
         user.passwordHash = passwordHash;
-        user.emailVerified = false;
+        user.emailVerified = true; // Bypassed OTP
         user.emailVerificationCodeHash = emailVerificationCodeHash;
         user.emailVerificationExpiresAt = emailVerificationExpiresAt;
         user.verificationChannel = otpChannel;
@@ -138,25 +138,31 @@ router.post(
           email: lowerEmail,
           phone: normalizedPhone,
           passwordHash,
-          emailVerified: false,
+          emailVerified: true, // Bypassed OTP
           emailVerificationCodeHash,
           emailVerificationExpiresAt,
           verificationChannel: otpChannel,
         });
       }
 
-      await sendOtpByChannel(user, otp, otpChannel);
+      // OTP verification disabled for development
+      // TODO: re-enable for production
+      // await sendOtpByChannel(user, otp, otpChannel);
+      //
+      // return res.status(201).json({
+      //   message:
+      //     otpChannel === 'phone'
+      //       ? 'Verification code sent to your phone'
+      //       : 'Verification code sent to your email',
+      //   channel: otpChannel,
+      //   destination: getDestinationValue(otpChannel, user),
+      //   maskedDestination: getMaskedDestination(otpChannel, user),
+      //   requiresVerification: true,
+      // });
 
-      return res.status(201).json({
-        message:
-          otpChannel === 'phone'
-            ? 'Verification code sent to your phone'
-            : 'Verification code sent to your email',
-        channel: otpChannel,
-        destination: getDestinationValue(otpChannel, user),
-        maskedDestination: getMaskedDestination(otpChannel, user),
-        requiresVerification: true,
-      });
+      // Immediate JWT return (development bypass)
+      const token = createToken({ userId: user._id, role: user.role });
+      return res.status(201).json({ token, user: sanitizeUser(user) });
     } catch (err) {
       console.error('Register error:', err);
       return res.status(500).json({ message: err.message || 'Server error' });
@@ -333,18 +339,26 @@ router.post(
         return res.status(400).json({ message: 'Incorrect email/phone or password' });
       }
 
+      // OTP verification disabled for development
+      // TODO: re-enable for production
+      // if (!user.emailVerified) {
+      //   return res.status(403).json({
+      //     message:
+      //       (user.verificationChannel || 'email') === 'phone'
+      //         ? 'Verify your phone OTP before logging in'
+      //         : 'Verify your email OTP before logging in',
+      //     requiresVerification: true,
+      //     email: user.email,
+      //     phone: user.phone,
+      //     channel: user.verificationChannel || 'email',
+      //     maskedDestination: getMaskedDestination(user.verificationChannel || 'email', user),
+      //   });
+      // }
+
+      // Auto-verify user if they log in during dev bypass
       if (!user.emailVerified) {
-        return res.status(403).json({
-          message:
-            (user.verificationChannel || 'email') === 'phone'
-              ? 'Verify your phone OTP before logging in'
-              : 'Verify your email OTP before logging in',
-          requiresVerification: true,
-          email: user.email,
-          phone: user.phone,
-          channel: user.verificationChannel || 'email',
-          maskedDestination: getMaskedDestination(user.verificationChannel || 'email', user),
-        });
+        user.emailVerified = true;
+        await user.save();
       }
 
       const token = createToken({ userId: user._id, role: user.role });
@@ -393,11 +407,14 @@ router.post(
       user.emailVerificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await user.save();
 
-      await sendPasswordResetEmail({ to: user.email, name: user.name, otp });
+      // OTP sending disabled for development
+      // TODO: re-enable for production
+      // await sendPasswordResetEmail({ to: user.email, name: user.name, otp });
 
       return res.status(200).json({
-        message: 'Password reset code sent to your registered email.',
+        message: 'Password reset code generated (Dev Mode).',
         maskedDestination: maskEmail(user.email),
+        devOtp: otp, // Returned for local testing
       });
     } catch (err) {
       console.error('Forgot password error:', err);

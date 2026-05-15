@@ -13,6 +13,20 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api";
 
+const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+
 const paymentMethods = [
   { id: "cod", name: "Cash on Delivery", icon: Banknote, description: "Pay when you receive" },
   { id: "upi", name: "UPI", icon: Smartphone, description: "GPay, PhonePe, Paytm" },
@@ -114,42 +128,137 @@ export default function Checkout() {
         totalAmount: orderTotal,
       };
 
-      const createdOrder = await apiRequest<{ _id?: string }>("/api/orders", {
-        method: "POST",
-        token,
-        body: JSON.stringify(orderPayload),
-      });
+      if (selectedPayment === "cod") {
+        const createdOrder = await apiRequest<{ _id?: string }>("/api/orders", {
+          method: "POST",
+          token,
+          body: JSON.stringify(orderPayload),
+        });
 
-      const orderDetails = {
-        orderId: createdOrder?._id || `ORD${Date.now().toString().slice(-8)}`,
-        items: items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-        shippingAddress: {
-          fullName: `${formData.firstName} ${formData.lastName}`,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-          phone: `+91 ${formData.phone}`,
-        },
-        paymentMethod: paymentMethods.find((p) => p.id === selectedPayment)?.name || "Cash on Delivery",
-        subtotal: totalPrice,
-        shipping: shippingCost,
-        total: orderTotal,
-        orderDate: new Date(),
-        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      };
+        const orderDetails = {
+          orderId: createdOrder?._id || `ORD${Date.now().toString().slice(-8)}`,
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          shippingAddress: {
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            phone: `+91 ${formData.phone}`,
+          },
+          paymentMethod: "Cash on Delivery",
+          subtotal: totalPrice,
+          shipping: shippingCost,
+          total: orderTotal,
+          orderDate: new Date(),
+          estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        };
 
-      clearCart();
-      navigate("/order-confirmation", { state: { order: orderDetails } });
+        clearCart();
+        navigate("/order-confirmation", { state: { order: orderDetails } });
+      } else {
+        // Razorpay flow
+        const res = await loadRazorpay();
+        if (!res) {
+          toast.error("Razorpay SDK failed to load. Are you online?");
+          setIsProcessing(false);
+          return;
+        }
+
+        const razorpayOrder = await apiRequest<{ orderId: string; razorpayOrderId: string; amount: number; currency: string; key: string }>("/api/payments/create-order", {
+          method: "POST",
+          token,
+          body: JSON.stringify(orderPayload),
+        });
+
+        if (!razorpayOrder) {
+          toast.error("Server error. Are you online?");
+          setIsProcessing(false);
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || razorpayOrder.key,
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: "RASU E-Commerce",
+          description: "Test Transaction",
+          order_id: razorpayOrder.razorpayOrderId,
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await apiRequest<{ verified: boolean; message: string }>("/api/payments/verify", {
+                method: "POST",
+                token,
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: razorpayOrder.orderId,
+                }),
+              });
+
+              if (verifyRes?.verified) {
+                const orderDetails = {
+                  orderId: razorpayOrder.orderId,
+                  items: items.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.image,
+                  })),
+                  shippingAddress: {
+                    fullName: `${formData.firstName} ${formData.lastName}`,
+                    address: formData.address,
+                    city: formData.city,
+                    state: formData.state,
+                    pincode: formData.pincode,
+                    phone: `+91 ${formData.phone}`,
+                  },
+                  paymentMethod: "Razorpay",
+                  subtotal: totalPrice,
+                  shipping: shippingCost,
+                  total: orderTotal,
+                  orderDate: new Date(),
+                  estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+                };
+
+                clearCart();
+                navigate("/order-confirmation", { state: { order: orderDetails } });
+              } else {
+                toast.error("Payment Verification Failed!");
+              }
+            } catch (err) {
+              console.error(err);
+              toast.error("Payment verification failed. Please contact support.");
+            }
+          },
+          prefill: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: {
+            color: "#ffffff",
+          },
+          modal: {
+            ondismiss: function () {
+              setIsProcessing(false);
+            },
+          },
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.open();
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to place order");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -361,7 +470,7 @@ export default function Checkout() {
                 <div className="space-y-4 max-h-64 overflow-y-auto mb-6">
                   {items.map((item) => (
                     <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-3">
-                      <img
+                      <img loading="lazy"
                         src={item.image}
                         alt={item.name}
                         className="w-16 h-20 object-cover rounded-lg"

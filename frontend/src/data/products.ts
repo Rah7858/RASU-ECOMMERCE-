@@ -49,14 +49,14 @@ const menTrousersImages = [
   "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80",
   "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
   "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600&q=80",
-  "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=600&q=80",
+  "https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80", // Replaced woman with man
 ];
 
 const menJacketImages = [
   "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=80",
-  "https://images.unsplash.com/photo-1544923246-77307dd628b8?w=600&q=80",
-  "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80",
-  "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=600&q=80",
+  "https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80", // Replaced 404 with leather jacket guy
+  "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=600&q=80", // Fixed duplicate with women's jacket
+  "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
 ];
 
 const menHoodieImages = [
@@ -75,9 +75,9 @@ const menShoeImages = [
 ];
 
 const menEthnicImages = [
-  "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80",
-  "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
-  "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80",
+  "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80", // Replaced women's saree
+  "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80", // Replaced shirt on chair
+  "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=80", // Replaced women's kurti
 ];
 
 const womenTopImages = [
@@ -114,7 +114,7 @@ const womenTrousersImages = [
 const womenSkirtImages = [
   "https://images.unsplash.com/photo-1577900232427-18219b9166a0?w=600&q=80",
   "https://images.unsplash.com/photo-1592301933927-35b597393c0a?w=600&q=80",
-  "https://images.unsplash.com/photo-1583496661160-fb5886a0afa3?w=600&q=80",
+  "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80", // Replaced 404
 ];
 
 const womenJacketImages = [
@@ -132,7 +132,7 @@ const womenShoeImages = [
 
 const womenEthnicImages = [
   "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80",
-  "https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80",
+  "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&q=80", // Replaced guy in leather jacket
   "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80",
 ];
 

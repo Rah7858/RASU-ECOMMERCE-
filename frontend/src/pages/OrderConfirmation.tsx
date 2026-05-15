@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, Truck, MapPin, Calendar, ArrowRight } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +40,34 @@ const OrderConfirmation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDetails | null>(null);
+
+  useEffect(() => {
+    // Fire confetti when component mounts
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  }, []);
 
   useEffect(() => {
     // Get order details from navigation state or generate mock data
@@ -197,7 +226,7 @@ const OrderConfirmation = () => {
                     {order.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                          <img
+                          <img loading="lazy"
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"

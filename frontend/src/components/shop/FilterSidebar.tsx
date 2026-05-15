@@ -80,7 +80,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card border-l border-border z-50 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
               <motion.h2
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -100,7 +100,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto h-[calc(100%-140px)] p-6 space-y-6">
+            <div className="overflow-y-auto h-[calc(100%-140px)] p-4 sm:p-6 space-y-6">
               {/* Price Range */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -341,7 +341,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-border bg-card">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 border-t border-border bg-card">
               <div className="flex gap-3">
                 <motion.button
                   whileHover={{ scale: 1.02 }}

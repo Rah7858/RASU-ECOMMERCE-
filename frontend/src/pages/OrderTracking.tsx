@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Package, 
@@ -57,18 +57,49 @@ const statusIcons: Record<string, typeof Package> = {
 const OrderTracking = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { orderId: paramOrderId } = useParams<{ orderId: string }>();
   const [trackingId, setTrackingId] = useState("");
   const [orderData, setOrderData] = useState<OrderTrackingData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [timeSinceUpdate, setTimeSinceUpdate] = useState<string>("");
 
   useEffect(() => {
-    // Get order from navigation state or show search
-    if (location.state?.orderId) {
+    if (paramOrderId) {
+      loadOrderTracking(paramOrderId);
+    } else if (location.state?.orderId) {
       loadOrderTracking(location.state.orderId);
     }
-  }, [location.state]);
+  }, [paramOrderId, location.state]);
 
-  const loadOrderTracking = (orderId: string) => {
+  // Polling every 30 seconds
+  useEffect(() => {
+    const currentId = paramOrderId || location.state?.orderId || trackingId;
+    if (!currentId || !orderData) return;
+
+    const interval = setInterval(() => {
+      loadOrderTracking(currentId, true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [paramOrderId, location.state, trackingId, orderData]);
+
+  // Time since update ticker
+  useEffect(() => {
+    if (!lastUpdated) return;
+    
+    const ticker = setInterval(() => {
+      const diff = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
+      setTimeSinceUpdate(`${diff} seconds ago`);
+    }, 1000);
+
+    return () => clearInterval(ticker);
+  }, [lastUpdated]);
+
+  const loadOrderTracking = (orderId: string, isSilentUpdate = false) => {
+    if (!isSilentUpdate) {
+      // Show loading state if it's the first load or manual search
+    }
     // Mock order tracking data - replace with actual API call
     const mockTimeline: TrackingStatus[] = [
       {
@@ -133,6 +164,8 @@ const OrderTracking = () => {
     };
 
     setOrderData(mockOrder);
+    setLastUpdated(new Date());
+    setTimeSinceUpdate("just now");
   };
 
   const handleTrackOrder = (e: React.FormEvent) => {
@@ -247,9 +280,16 @@ const OrderTracking = () => {
                         Placed on {formatDate(orderData.orderDate)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
-                      <Truck className="w-4 h-4" />
-                      <span className="text-sm font-medium">{orderData.currentStatus}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
+                        <Truck className="w-4 h-4" />
+                        <span className="text-sm font-medium">{orderData.currentStatus}</span>
+                      </div>
+                      {lastUpdated && (
+                        <span className="text-[10px] text-muted-foreground mt-1">
+                          Last updated: {timeSinceUpdate}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
