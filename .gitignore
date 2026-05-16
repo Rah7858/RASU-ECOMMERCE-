@@ -4,10 +4,19 @@ node_modules/
 # Python virtual environment
 .venv/
 
-# Environment variables and secrets
+# Environment variables and secrets - NEVER commit these
 .env
+.env.local
+.env.production
+.env.development
+.env.test
 backend/.env
 frontend/.env
+frontend/.env.local
+*.env
+
+# Seed scripts with potential secrets
+backend/scripts/seedAllProducts.cjs
 
 # Logs
 npm-debug.log*
