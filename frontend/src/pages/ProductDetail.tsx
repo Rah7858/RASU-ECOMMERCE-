@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Share2, Star, Minus, Plus, ShoppingBag, Check, Truck, Shield, RotateCcw, Sparkles } from 'lucide-react';
-import { products } from '@/data/products';
+import { products as staticProducts } from '@/data/products';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '@/contexts/CartContext';
@@ -13,9 +13,10 @@ import { ProductCard } from '@/components/shop/ProductCard';
 import ProductReviews from '@/components/shop/ProductReviews';
 import { AISizeRecommender } from '@/components/ai/AISizeRecommender';
 import { AIOutfitBuilder } from '@/components/ai/AIOutfitBuilder';
+import { apiRequest } from '@/lib/api';
 
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const colors = [
+const defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const defaultColors = [
   { name: 'Black', value: '#1a1a1a' },
   { name: 'White', value: '#ffffff' },
   { name: 'Navy', value: '#1e3a5f' },
@@ -28,28 +29,62 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
-  
-  const product = products.find(p => p.id === Number(id));
-  
+
+  // Try static data first (numeric IDs), then API (MongoDB ObjectIds)
+  const staticProduct = staticProducts.find(p => p.id === Number(id));
+
+  const [dbProduct, setDbProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(!staticProduct);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
-  const reviewCount = useMemo(() => Math.floor(Math.random() * 200 + 50), [product?.id]);
-
-  // Product images - same image, different views
-  const productImages = product ? [product.image] : [];
-
-  // Get related products (same category, different product)
-  const relatedProducts = products
-    .filter(p => p.category === product?.category && p.id !== product?.id)
-    .slice(0, 4);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [id]);
+    if (!staticProduct && id) {
+      setLoading(true);
+      apiRequest<any>(`/api/products/${id}`)
+        .then(data => {
+          setDbProduct({
+            ...data,
+            id: data._id || data.id,
+            category: data.gender === 'unisex' ? 'accessories' : data.gender,
+            subcategory: data.subcategory || data.category || 'General',
+            rating: data.rating || 4.5,
+            isNew: data.isNew ?? true,
+          });
+        })
+        .catch(() => setDbProduct(null))
+        .finally(() => setLoading(false));
+    }
+  }, [id, staticProduct]);
+
+  const product = staticProduct || dbProduct;
+  const reviewCount = useMemo(() => Math.floor(Math.random() * 200 + 50), [product?.id]);
+  const productImages = product ? (product.images?.length ? product.images : [product.image]) : [];
+  const productSizes = product?.sizes?.length ? product.sizes : defaultSizes;
+  const productColors = product?.colors?.length
+    ? product.colors.map((c: string) => ({ name: c, value: c === 'Black' ? '#1a1a1a' : c === 'White' ? '#ffffff' : c === 'Navy' ? '#1e3a5f' : c === 'Brown' ? '#8B4513' : c === 'Beige' ? '#d4c4b0' : c === 'Olive' ? '#556b2f' : c === 'Red' ? '#c41e3a' : c === 'Grey' ? '#808080' : c === 'Pink' ? '#FF69B4' : c === 'Blue' ? '#4169E1' : c === 'Gold' ? '#FFD700' : c === 'Silver' ? '#C0C0C0' : c === 'Tan' ? '#D2B48C' : c === 'Khaki' ? '#F0E68C' : c === 'Multi' ? '#FF6347' : '#333' }))
+    : defaultColors;
+
+  // Related products from static data
+  const relatedProducts = staticProducts
+    .filter(p => p.category === product?.category && p.id !== product?.id)
+    .slice(0, 4);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -64,30 +99,22 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      toast({
-        title: "Please select a size",
-        variant: "destructive",
-      });
+      toast({ title: "Please select a size", variant: "destructive" });
       return;
     }
     if (!selectedColor) {
-      toast({
-        title: "Please select a color",
-        variant: "destructive",
-      });
+      toast({ title: "Please select a color", variant: "destructive" });
       return;
     }
-
     addItem({
       id: String(product.id),
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.image || product.images?.[0] || '',
       size: selectedSize,
       color: selectedColor,
       quantity,
     });
-
     toast({
       title: "Added to bag",
       description: `${product.name} has been added to your bag.`,
@@ -96,23 +123,16 @@ const ProductDetail = () => {
 
   const handleShare = async () => {
     try {
-      await navigator.share({
-        title: product.name,
-        url: window.location.href,
-      });
+      await navigator.share({ title: product.name, url: window.location.href });
     } catch {
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
-        description: "Product link copied to clipboard",
-      });
+      toast({ title: "Link copied", description: "Product link copied to clipboard" });
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
       <main className="pt-20">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-6">
@@ -134,7 +154,6 @@ const ProductDetail = () => {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Image Gallery */}
             <div className="space-y-4">
-              {/* Main Image */}
               <motion.div
                 key={selectedImage}
                 initial={{ opacity: 0 }}
@@ -147,25 +166,17 @@ const ProductDetail = () => {
                   className="w-full h-full object-cover"
                 />
               </motion.div>
-
-              {/* Thumbnails - only show if more than 1 image */}
               {productImages.length > 1 && (
                 <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-                  {productImages.map((img, index) => (
+                  {productImages.map((img: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
                       className={`flex-shrink-0 w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index
-                          ? 'border-primary'
-                          : 'border-transparent hover:border-muted-foreground/30'
+                        selectedImage === index ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'
                       }`}
                     >
-                      <img loading="lazy"
-                        src={img}
-                        alt={`${product.name} view ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      <img loading="lazy" src={img} alt={`${product.name} view ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -174,29 +185,19 @@ const ProductDetail = () => {
 
             {/* Product Info */}
             <div className="space-y-6">
-              {/* Header */}
               <div>
                 <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
-                  {product.brand}
+                  {product.brand || 'RASU'}
                 </p>
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
-                
-                {/* Rating */}
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(product.rating)
-                            ? 'fill-accent text-accent'
-                            : 'text-muted-foreground/30'
-                        }`}
-                      />
+                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-accent text-accent' : 'text-muted-foreground/30'}`} />
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {product.rating} ({reviewCount} reviews)
+                    {product.rating} ({product.numReviews || reviewCount} reviews)
                   </span>
                 </div>
               </div>
@@ -206,15 +207,16 @@ const ProductDetail = () => {
                 <span className="text-3xl font-bold">₹{product.price.toLocaleString('en-IN')}</span>
                 {product.originalPrice && (
                   <>
-                    <span className="text-xl text-muted-foreground line-through">
-                      ₹{product.originalPrice.toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-sm font-medium text-green-500">
-                      {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
-                    </span>
+                    <span className="text-xl text-muted-foreground line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>
+                    <span className="text-sm font-medium text-green-500">{Math.round((1 - product.price / product.originalPrice) * 100)}% OFF</span>
                   </>
                 )}
               </div>
+
+              {/* Description */}
+              {product.description && (
+                <p className="text-muted-foreground">{product.description}</p>
+              )}
 
               {/* Color Selection */}
               <div>
@@ -222,7 +224,7 @@ const ProductDetail = () => {
                   Color: <span className="text-muted-foreground">{selectedColor || 'Select a color'}</span>
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  {colors.map((color) => (
+                  {productColors.map((color: {name: string; value: string}) => (
                     <button
                       key={color.name}
                       onClick={() => setSelectedColor(color.name)}
@@ -246,7 +248,6 @@ const ProductDetail = () => {
 
               {/* Size Selection */}
               <div>
-                {/* AI Size Recommender trigger */}
                 <button
                   onClick={() => setIsSizeModalOpen(true)}
                   className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors mb-3 group"
@@ -254,17 +255,14 @@ const ProductDetail = () => {
                   <Sparkles className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
                   🤖 Find My Size
                 </button>
-
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-medium">
                     Size: <span className="text-muted-foreground">{selectedSize || 'Select'}</span>
                   </p>
-                  <button className="text-sm text-primary hover:underline">
-                    Size Guide
-                  </button>
+                  <button className="text-sm text-primary hover:underline">Size Guide</button>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {sizes.map((size) => (
+                  {productSizes.map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
@@ -285,17 +283,11 @@ const ProductDetail = () => {
                 <p className="text-sm font-medium mb-3">Quantity</p>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-border rounded-lg">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-3 hover:bg-muted transition-colors"
-                    >
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:bg-muted transition-colors">
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="px-6 font-medium">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="p-3 hover:bg-muted transition-colors"
-                    >
+                    <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:bg-muted transition-colors">
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
@@ -304,28 +296,13 @@ const ProductDetail = () => {
 
               {/* Actions */}
               <div className="flex gap-4 pt-4">
-                <Button
-                  size="lg"
-                  className="flex-1 h-14 text-base btn-glow"
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  Add to Bag
+                <Button size="lg" className="flex-1 h-14 text-base btn-glow" onClick={handleAddToCart}>
+                  <ShoppingBag className="w-5 h-5 mr-2" /> Add to Bag
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 w-14 p-0"
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                >
+                <Button size="lg" variant="outline" className="h-14 w-14 p-0" onClick={() => setIsWishlisted(!isWishlisted)}>
                   <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 w-14 p-0"
-                  onClick={handleShare}
-                >
+                <Button size="lg" variant="outline" className="h-14 w-14 p-0" onClick={handleShare}>
                   <Share2 className="w-5 h-5" />
                 </Button>
               </div>
@@ -349,43 +326,19 @@ const ProductDetail = () => {
               {/* Tabs */}
               <Tabs defaultValue="description" className="pt-6">
                 <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none p-0 h-auto">
-                  <TabsTrigger
-                    value="description"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                  >
-                    Description
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="details"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                  >
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="shipping"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-                  >
-                    Shipping
-                  </TabsTrigger>
+                  <TabsTrigger value="description" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3">Description</TabsTrigger>
+                  <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3">Details</TabsTrigger>
+                  <TabsTrigger value="shipping" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3">Shipping</TabsTrigger>
                 </TabsList>
                 <TabsContent value="description" className="pt-6 text-muted-foreground">
-                  <p>
-                    Elevate your wardrobe with this premium {product.name.toLowerCase()}. 
-                    Crafted with meticulous attention to detail, this piece combines contemporary 
-                    design with timeless elegance. Perfect for both casual outings and refined occasions.
-                  </p>
-                  <p className="mt-4">
-                    Made from high-quality materials that ensure comfort and durability, 
-                    this item is designed to be a versatile addition to your collection.
-                  </p>
+                  <p>{product.description || `Elevate your wardrobe with this premium ${product.name.toLowerCase()}. Crafted with meticulous attention to detail.`}</p>
                 </TabsContent>
                 <TabsContent value="details" className="pt-6">
                   <ul className="space-y-2 text-muted-foreground">
                     <li>• Premium quality fabric blend</li>
-                    <li>• Regular fit silhouette</li>
+                    <li>• {product.subcategory ? `Category: ${product.subcategory}` : 'Regular fit silhouette'}</li>
                     <li>• Machine washable</li>
-                    <li>• Imported</li>
-                    <li>• Model is 6'1" wearing size M</li>
+                    <li>• {product.stock ? `${product.stock} in stock` : 'In Stock'}</li>
                   </ul>
                 </TabsContent>
                 <TabsContent value="shipping" className="pt-6 text-muted-foreground">
@@ -400,7 +353,7 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* AI Outfit Builder – Feature 3 */}
+          {/* AI Outfit Builder */}
           <AIOutfitBuilder
             productId={product.id}
             productName={product.name}
@@ -411,7 +364,7 @@ const ProductDetail = () => {
           />
         </section>
 
-        {/* AI Size Recommender Modal – Feature 2 */}
+        {/* AI Size Recommender Modal */}
         <AISizeRecommender
           isOpen={isSizeModalOpen}
           onClose={() => setIsSizeModalOpen(false)}
@@ -432,26 +385,27 @@ const ProductDetail = () => {
         </section>
 
         {/* Related Products */}
-        <section className="border-t border-border py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8">You May Also Like</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {relatedProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
+        {relatedProducts.length > 0 && (
+          <section className="border-t border-border py-20">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl md:text-3xl font-bold mb-8">You May Also Like</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {relatedProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
-
       <Footer />
     </div>
   );
