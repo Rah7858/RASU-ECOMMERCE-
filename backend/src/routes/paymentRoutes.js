@@ -94,7 +94,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
 
     await Payment.create({
       orderId: order._id,
-      userId: req.user.userId,
+      user: req.user.userId,
       razorpayOrderId: razorpayOrder.id,
       amount: totalAmount,
       currency: 'INR',

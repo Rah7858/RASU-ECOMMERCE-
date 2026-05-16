@@ -1,14 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { Send, Sparkles, CheckCircle } from "lucide-react";
 import { useRef, useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function NewsletterSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   return (
     <section ref={containerRef} className="py-24 md:py-32 bg-background relative overflow-hidden">
@@ -136,7 +136,7 @@ export function NewsletterSection() {
               transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
             >
-              {t("newsletter.title")}
+              {t("home.newsletter_title")}
             </motion.h2>
           </div>
 
@@ -146,7 +146,7 @@ export function NewsletterSection() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl mx-auto"
           >
-            {t("newsletter.description")}
+            {t("home.newsletter_sub")}
           </motion.p>
 
           {/* Enhanced Email Form */}
@@ -166,7 +166,7 @@ export function NewsletterSection() {
             >
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("footer.newsletter_placeholder")}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 className="w-full px-6 py-4 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none pr-36 transition-all"
@@ -201,7 +201,7 @@ export function NewsletterSection() {
                 >
                   <Send className="w-4 h-4" />
                 </motion.span>
-                <span className="hidden sm:inline relative z-10">Subscribe</span>
+                <span className="hidden sm:inline relative z-10">{t("home.subscribe")}</span>
               </motion.button>
             </motion.div>
 

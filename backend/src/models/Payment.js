@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
   {
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     razorpayOrderId: { type: String, required: true, unique: true },
     razorpayPaymentId: String,

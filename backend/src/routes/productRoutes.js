@@ -16,7 +16,13 @@ router.get('/', async (req, res) => {
     if (category) filter.category = category;
     if (ageGroup) filter.ageGroup = ageGroup;
     if (occasion) filter.occasion = occasion;
-    if (search) filter.name = { $regex: search, $options: 'i' };
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
     return res.json(products);

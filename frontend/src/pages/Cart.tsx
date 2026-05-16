@@ -6,9 +6,11 @@ import { Footer } from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
+  const { t } = useTranslation();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -38,7 +40,7 @@ export default function Cart() {
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Continue Shopping</span>
+              <span>{t("common.continue_shopping")}</span>
             </Link>
 
             <div className="flex items-center gap-4">
@@ -46,7 +48,7 @@ export default function Cart() {
                 <ShoppingBag className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold">Shopping Cart</h1>
+                <h1 className="text-3xl md:text-4xl font-bold">{t("cart.title")}</h1>
                 <p className="text-muted-foreground">
                   {totalItems} {totalItems === 1 ? "item" : "items"}
                 </p>
@@ -63,14 +65,14 @@ export default function Cart() {
               <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-6">
                 <ShoppingBag className="w-12 h-12 text-muted-foreground" />
               </div>
-              <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
+              <h2 className="text-2xl font-semibold mb-2">{t("cart.empty")}</h2>
               <p className="text-muted-foreground mb-8">
-                Looks like you haven't added anything yet
+                {t("cart.empty_sub")}
               </p>
               <Link to="/shop">
                 <Button size="lg" className="gap-2">
                   <ShoppingBag className="w-5 h-5" />
-                  Start Shopping
+                  {t("cart.start_shopping")}
                 </Button>
               </Link>
             </motion.div>
@@ -158,17 +160,17 @@ export default function Cart() {
                 className="lg:sticky lg:top-32 h-fit"
               >
                 <div className="bg-card rounded-2xl border border-border/50 p-6">
-                  <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+                  <h2 className="text-xl font-semibold mb-6">{t("checkout.order_summary")}</h2>
 
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal ({totalItems} items)</span>
+                      <span className="text-muted-foreground">{t("cart.subtotal")} ({totalItems} items)</span>
                       <span>{formatPrice(totalPrice)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="text-muted-foreground">{t("cart.shipping")}</span>
                       <span className={shippingCost === 0 ? "text-green-500" : ""}>
-                        {shippingCost === 0 ? "FREE" : formatPrice(shippingCost)}
+                        {shippingCost === 0 ? t("cart.free_shipping") : formatPrice(shippingCost)}
                       </span>
                     </div>
                     {shippingCost > 0 && (
@@ -181,19 +183,19 @@ export default function Cart() {
                   <Separator className="my-4" />
 
                   <div className="flex justify-between text-lg font-bold mb-6">
-                    <span>Total</span>
+                    <span>{t("cart.total")}</span>
                     <span>{formatPrice(orderTotal)}</span>
                   </div>
 
                   <Link to="/checkout">
                     <Button className="w-full h-12 text-base font-semibold">
-                      Proceed to Checkout
+                      {t("cart.checkout")}
                     </Button>
                   </Link>
 
                   <Link to="/shop">
                     <Button variant="outline" className="w-full mt-3">
-                      Continue Shopping
+                      {t("common.continue_shopping")}
                     </Button>
                   </Link>
                 </div>

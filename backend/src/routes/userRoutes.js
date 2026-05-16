@@ -1,32 +1,10 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
-
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads', 'avatars');
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `avatar_${req.user.userId}_${Date.now()}${ext}`);
-  },
-});
-
-const fileFilter = (_req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowed.includes(file.mimetype)) cb(null, true);
-  else cb(new Error('Only JPEG, PNG, WebP or GIF images are allowed'));
-};
-
-const upload = multer({ storage, fileFilter, limits: { fileSize: 4 * 1024 * 1024 } });
 
 const sanitizeUser = (user) => ({
   id: user._id,
@@ -172,30 +150,18 @@ router.put(
   }
 );
 
-router.post('/upload', authenticateToken, (req, res, next) => {
-  upload.single('avatar')(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ message: err.code === 'LIMIT_FILE_SIZE' ? 'Image must be under 4 MB' : err.message });
-    }
-    if (err) return res.status(400).json({ message: err.message });
-    next();
-  });
-}, async (req, res) => {
+router.put('/profile/avatar', authenticateToken, async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No image file provided' });
+    const { avatar } = req.body;
+    
+    if (!avatar || !avatar.startsWith('data:image/')) {
+      return res.status(400).json({ message: 'Valid Base64 image is required' });
     }
 
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Delete old avatar file if it was a local upload
-    if (user.profileImage && user.profileImage.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '..', '..', user.profileImage);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    user.profileImage = `/uploads/avatars/${req.file.filename}`;
+    user.profileImage = avatar;
     await user.save();
 
     return res.json({
@@ -208,15 +174,10 @@ router.post('/upload', authenticateToken, (req, res, next) => {
   }
 });
 
-router.delete('/upload', authenticateToken, async (req, res) => {
+router.delete('/profile/avatar', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (user.profileImage && user.profileImage.startsWith('/uploads/')) {
-      const filePath = path.join(__dirname, '..', '..', user.profileImage);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    }
 
     user.profileImage = '';
     await user.save();

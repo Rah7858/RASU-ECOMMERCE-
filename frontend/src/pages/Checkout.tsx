@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const loadRazorpay = () => {
   return new Promise((resolve) => {
@@ -35,7 +37,9 @@ const paymentMethods = [
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("cod");
   const [formData, setFormData] = useState({
@@ -240,12 +244,15 @@ export default function Checkout() {
             }
           },
           prefill: {
-            name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            contact: formData.phone,
+            name: `${formData.firstName} ${formData.lastName}`.trim() || user?.name || "RASU Customer",
+            email: formData.email || user?.email || "",
+            contact: formData.phone || user?.phone || "",
+          },
+          notes: {
+            address: formData.address || "",
           },
           theme: {
-            color: "#ffffff",
+            color: "#000000",
           },
           modal: {
             ondismiss: function () {
@@ -297,9 +304,9 @@ export default function Checkout() {
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Continue Shopping</span>
+              <span>{t("common.continue_shopping")}</span>
             </Link>
-            <h1 className="text-3xl md:text-4xl font-bold">Checkout</h1>
+            <h1 className="text-3xl md:text-4xl font-bold">{t("checkout.title")}</h1>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -316,7 +323,7 @@ export default function Checkout() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold">Shipping Address</h2>
+                  <h2 className="text-xl font-semibold">{t("checkout.address")}</h2>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -341,7 +348,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.email")}</Label>
                     <Input
                       id="email"
                       name="email"
@@ -352,7 +359,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{t("checkout.phone")}</Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -363,7 +370,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{t("checkout.address_line1")}</Label>
                     <Input
                       id="address"
                       name="address"
@@ -373,7 +380,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{t("checkout.city")}</Label>
                     <Input
                       id="city"
                       name="city"
@@ -383,7 +390,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
+                    <Label htmlFor="state">{t("checkout.state")}</Label>
                     <Input
                       id="state"
                       name="state"
@@ -393,7 +400,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="pincode">Pincode</Label>
+                    <Label htmlFor="pincode">{t("checkout.pincode")}</Label>
                     <Input
                       id="pincode"
                       name="pincode"
@@ -417,7 +424,7 @@ export default function Checkout() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold">Payment Method</h2>
+                  <h2 className="text-xl font-semibold">{t("checkout.payment")}</h2>
                 </div>
 
                 <RadioGroup
@@ -463,7 +470,7 @@ export default function Checkout() {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Truck className="w-5 h-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold">Order Summary</h2>
+                  <h2 className="text-xl font-semibold">{t("checkout.order_summary")}</h2>
                 </div>
 
                 {/* Cart Items */}
@@ -493,13 +500,13 @@ export default function Checkout() {
                 {/* Price Breakdown */}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                     <span>{formatPrice(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-muted-foreground">{t("cart.shipping")}</span>
                     <span className={shippingCost === 0 ? "text-green-500" : ""}>
-                      {shippingCost === 0 ? "FREE" : formatPrice(shippingCost)}
+                      {shippingCost === 0 ? t("cart.free_shipping") : formatPrice(shippingCost)}
                     </span>
                   </div>
                   {shippingCost > 0 && (
@@ -512,7 +519,7 @@ export default function Checkout() {
                 <Separator className="my-4" />
 
                 <div className="flex justify-between text-lg font-bold mb-6">
-                  <span>Total</span>
+                  <span>{t("cart.total")}</span>
                   <span>{formatPrice(orderTotal)}</span>
                 </div>
 
@@ -528,7 +535,7 @@ export default function Checkout() {
                       className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
                     />
                   ) : (
-                    `Place Order • ${formatPrice(orderTotal)}`
+                    `${t("checkout.place_order")} • ${formatPrice(orderTotal)}`
                   )}
                 </Button>
 

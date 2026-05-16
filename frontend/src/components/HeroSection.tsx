@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from "fram
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRef, useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import heroModel from "@/assets/hero-model.jpg";
 
 const SKILL_BADGES = [
@@ -110,6 +111,7 @@ export function HeroSection() {
   const tiltImageRef = useRef<HTMLDivElement>(null);
   const { x: magneticX, y: magneticY } = useMagnetic(magneticBtnRef);
   const { rotateX, rotateY } = useTilt(tiltImageRef);
+  const { t } = useTranslation();
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -132,7 +134,7 @@ export function HeroSection() {
   const rightColumnY = useTransform(scrollY, [0, 500], [0, 100]);
 
   // Framer Motion Variants for Staggered Entrance
-  const headlineWords = ["DEFINE", "YOUR", "FUTURE"];
+  const headlineWords = t('home.hero_title').split(' ');
   
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -233,7 +235,7 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.9, ease: "easeOut" }}
             className="mt-6 text-base font-medium text-muted-foreground max-w-[480px] leading-relaxed"
           >
-            Premium Futuristic Fashion — Designed for Those Who Lead
+            {t('home.hero_subtitle')}
           </motion.p>
 
           {/* Premium Micro-interaction CTAs */}
@@ -250,7 +252,7 @@ export function HeroSection() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full sm:w-auto px-8 py-4 bg-accent text-accent-foreground font-semibold rounded-full flex items-center justify-center gap-3 transition-all duration-300 ease-out hover:scale-[1.02] hover:brightness-110 shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/40"
               >
-                Shop Now
+                {t('home.shop_now')}
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </motion.button>
             </Link>
@@ -259,7 +261,7 @@ export function HeroSection() {
               onClick={scrollToTechStack}
               className="w-full sm:w-auto group px-8 py-4 font-medium rounded-full border border-border bg-transparent text-foreground flex items-center justify-center gap-3 transition-all duration-300 hover:border-primary/50 hover:bg-primary/5 hover:text-primary z-10"
             >
-              View Tech Stack
+              {t('home.view_tech')}
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </motion.div>

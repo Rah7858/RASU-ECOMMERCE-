@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import { API_BASE_URL } from "@/lib/api";
 
@@ -112,6 +113,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { wishlist } = useWishlist();
   const { items: localCartItems } = useCart();
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<ProfileUser>(defaultUser);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -288,19 +290,37 @@ const Profile = () => {
     }
   };
 
+  const compressAndConvert = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 200;
+        canvas.height = 200;
+        ctx?.drawImage(img, 0, 0, 200, 200);
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        resolve(base64);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("avatar", file);
-
     try {
       setIsUploadingImage(true);
-      const response = await fetch(`${API_BASE_URL}/api/users/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      const base64Avatar = await compressAndConvert(file);
+
+      const response = await fetch(`${API_BASE_URL}/api/users/profile/avatar`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ avatar: base64Avatar }),
       });
 
       const data = await response.json();
@@ -321,7 +341,7 @@ const Profile = () => {
   const handleDeleteProfileImage = async () => {
     try {
       setIsUploadingImage(true);
-      const response = await fetch(`${API_BASE_URL}/api/users/upload`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/profile/avatar`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -375,13 +395,13 @@ const Profile = () => {
         <div className="container mx-auto max-w-6xl px-4">
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">User Profile</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t("profile.title")}</h1>
               <p className="text-sm text-muted-foreground">Manage your RASU account and shopping data.</p>
             </div>
 
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              {t("profile.logout")}
             </Button>
           </div>
 
@@ -396,7 +416,7 @@ const Profile = () => {
                   <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted">
                     {profile.profileImage ? (
                       <img loading="lazy"
-                        src={profile.profileImage.startsWith('/uploads') ? `${API_BASE_URL}${profile.profileImage}` : profile.profileImage}
+                        src={profile.profileImage}
                         alt="Avatar"
                         className="h-full w-full object-cover"
                       />
@@ -432,7 +452,7 @@ const Profile = () => {
                     disabled={isUploadingImage}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    {isUploadingImage ? "Uploading..." : "Upload Photo"}
+                    {isUploadingImage ? t("common.loading") : t("profile.upload_photo")}
                   </Button>
 
                   {profile.profileImage && (
@@ -454,7 +474,7 @@ const Profile = () => {
 
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
+                <CardTitle>{t("profile.personal_info")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -522,7 +542,7 @@ const Profile = () => {
                 </div>
 
                 <Button onClick={handleSaveProfile} disabled={isSaving} className="w-full md:w-auto">
-                  Save Profile
+                  {t("profile.save_changes")}
                 </Button>
               </CardContent>
             </Card>
@@ -583,7 +603,7 @@ const Profile = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Heart className="h-4 w-4" />
-                  Wishlist
+                  {t("profile.wishlist")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -632,7 +652,7 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Order History
+                {t("profile.orders")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">

@@ -66,6 +66,12 @@ export function AISizeRecommender({
       return;
     }
 
+    if (!API_KEY) {
+      setError("AI Stylist is warming up, try again in a moment! ✨");
+      setIsLoading(false);
+      return;
+    }
+
     setError("");
     setResult(null);
     setIsLoading(true);

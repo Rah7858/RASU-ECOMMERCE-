@@ -6,15 +6,19 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
-import { useRef } from "react";
-import { products, getSubcategories } from "@/data/products";
+import { useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { products as staticProducts, getSubcategories } from "@/data/products";
+import { apiRequest } from "@/lib/api";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useTranslation } from "react-i18next";
 
 const categories = [
-  { id: "all", name: "All Products", count: products.length },
-  { id: "men", name: "Men", count: products.filter(p => p.category === "men").length },
-  { id: "women", name: "Women", count: products.filter(p => p.category === "women").length },
-  { id: "accessories", name: "Accessories", count: products.filter(p => p.category === "accessories").length },
-  { id: "trending", name: "Trending", count: products.filter(p => p.isNew).length },
+  { id: "all", name: "All Products" },
+  { id: "men", name: "Men" },
+  { id: "women", name: "Women" },
+  { id: "accessories", name: "Accessories" },
+  { id: "trending", name: "Trending" },
 ];
 
 const subcategoriesByCategory: Record<string, string[]> = {
@@ -37,37 +41,68 @@ export default function Shop() {
   const [gridView, setGridView] = useState<"grid" | "large">("grid");
   const [sortBy, setSortBy] = useState("featured");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 30000]);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-50px" });
+  const { t } = useTranslation();
 
   const activeCategory = searchParams.get("category") || "all";
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      searchParams.set("search", debouncedSearch);
+    } else {
+      searchParams.delete("search");
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [debouncedSearch, setSearchParams]);
   
   // Get subcategories for active category
   const currentSubcategories = activeCategory !== "all" && activeCategory !== "trending" 
     ? subcategoriesByCategory[activeCategory] || []
     : [];
 
-  // Filter and sort products
-  const filteredProducts = products
+  // Fetch products from API
+  const { data: dbProducts = [], isLoading } = useQuery({
+    queryKey: ["products", activeCategory, debouncedSearch],
+    queryFn: async () => {
+      let url = "/api/products?";
+      if (activeCategory === "men" || activeCategory === "women") {
+        url += `gender=${activeCategory}&`;
+      } else if (activeCategory === "accessories") {
+        url += `gender=unisex&`;
+      }
+      
+      if (debouncedSearch) {
+        url += `search=${debouncedSearch}&`;
+      }
+      
+      const res = await apiRequest<any[]>(url);
+      return res.map(p => ({
+        ...p,
+        id: p._id || p.id,
+        category: p.gender === "unisex" ? "accessories" : p.gender,
+        subcategory: p.category || "General",
+        rating: p.rating || 4.5,
+        isNew: p.isNew !== undefined ? p.isNew : true,
+      }));
+    }
+  });
+
+  // Filter and sort products locally
+  const filteredProducts = dbProducts
     .filter((product) => {
-      // Category filter
+      // Category filter (trending)
       if (activeCategory === "trending") {
         if (!product.isNew) return false;
-      } else if (activeCategory !== "all" && product.category !== activeCategory) {
-        return false;
       }
       
       // Subcategory filter
       if (activeSubcategory && product.subcategory !== activeSubcategory) {
-        return false;
-      }
-      
-      // Search filter
-      if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
       
@@ -87,7 +122,7 @@ export default function Shop() {
         case "price-high":
           return b.price - a.price;
         case "rating":
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         default:
           return 0;
       }
@@ -195,16 +230,7 @@ export default function Shop() {
                 transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
               >
-                Shop{" "}
-                <motion.span
-                  animate={{ 
-                    color: ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--primary))"]
-                  }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                  className="text-primary"
-                >
-                  {categories.find(c => c.id === activeCategory)?.name || "All"}
-                </motion.span>
+                {t("shop.title")}
               </motion.h1>
             </div>
             
@@ -251,10 +277,7 @@ export default function Shop() {
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
-                  {category.name}
-                  <span className={`text-xs ${activeCategory === category.id ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                    ({category.count})
-                  </span>
+                  {t(`nav.${category.id === 'all' ? 'shop' : category.id}`)}
                 </span>
               </motion.button>
             ))}
@@ -297,9 +320,6 @@ export default function Shop() {
                       }`}
                     >
                       {subcategory}
-                      <span className="ml-1.5 text-xs opacity-60">
-                        ({products.filter(p => p.subcategory === subcategory).length})
-                      </span>
                     </motion.button>
                   ))}
                 </div>
@@ -318,7 +338,7 @@ export default function Shop() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t("shop.search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-2.5 bg-background/50 rounded-xl border border-border/50 text-sm focus:outline-none focus:border-primary/50 transition-colors"
@@ -334,7 +354,7 @@ export default function Shop() {
                 className="flex items-center gap-2 px-4 py-2.5 bg-background/50 rounded-xl border border-border/50 text-sm font-medium hover:border-primary/50 transition-colors"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                Filters
+                {t("shop.filters")}
               </motion.button>
 
               {/* Sort Dropdown */}
@@ -403,7 +423,7 @@ export default function Shop() {
             className="mb-6"
           >
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> products
+              {t("shop.showing", { count: filteredProducts.length })}
             </p>
           </motion.div>
 
@@ -529,7 +549,7 @@ export default function Shop() {
               >
                 <Search className="w-8 h-8 text-muted-foreground" />
               </motion.div>
-              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <h3 className="text-xl font-semibold mb-2">{t("shop.no_products")}</h3>
               <p className="text-muted-foreground mb-6">Try adjusting your filters or search query</p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -541,7 +561,7 @@ export default function Shop() {
                 }}
                 className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium"
               >
-                Clear Filters
+                {t("shop.clear_filters")}
               </motion.button>
             </motion.div>
           )}

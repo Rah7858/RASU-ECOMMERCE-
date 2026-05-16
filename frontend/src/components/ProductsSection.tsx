@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Heart, Eye, Sparkles } from "lucide-react";
 import rasuLogo from "@/assets/rasu-logo.png";
 import { useRef, useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
+import { formatPrice } from "@/utils/format";
 
 const products = [
   {
@@ -61,7 +62,7 @@ const products = [
 export function ProductsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -159,7 +160,7 @@ export function ProductsSection() {
               <motion.span
                 className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity"
               />
-              <span className="relative z-10">{t("products.viewAll")} →</span>
+              <span className="relative z-10">{t("common.view_all")}</span>
             </motion.button>
           </Link>
         </motion.div>
@@ -187,6 +188,7 @@ export function ProductsSection() {
 }
 
 function ProductCard({ product, index }: { product: typeof products[0]; index: number }) {
+  const { t, i18n } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -251,7 +253,7 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
                   animate={{ opacity: [1, 0.7, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  NEW
+                  {t("common.new") || "NEW"}
                 </motion.span>
               </motion.span>
             )}
@@ -262,7 +264,7 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
                 transition={{ delay: 0.7 + index * 0.1, type: "spring", bounce: 0.5 }}
                 className="px-3 py-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full"
               >
-                SALE
+                {t("common.sale") || "SALE"}
               </motion.span>
             )}
           </div>
@@ -308,7 +310,7 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
               />
               <ShoppingBag className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">Add to Cart</span>
+              <span className="relative z-10">{t("shop.add_to_cart")}</span>
             </motion.button>
           </motion.div>
         </div>
@@ -334,10 +336,10 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
             animate={{ x: isHovered ? 5 : 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            <span className="text-xl font-bold">₹{product.price.toLocaleString('en-IN')}</span>
+            <span className="text-xl font-bold">{formatPrice(product.price, i18n.language)}</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ₹{product.originalPrice.toLocaleString('en-IN')}
+                {formatPrice(product.originalPrice, i18n.language)}
               </span>
             )}
           </motion.div>

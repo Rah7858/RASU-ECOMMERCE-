@@ -63,6 +63,10 @@ export function StyleChatbot() {
   }, [isOpen]);
 
   const callClaude = useCallback(async (userMessage: string, history: Message[]) => {
+    if (!API_KEY) {
+      return "AI Stylist is warming up, try again in a moment! ✨";
+    }
+
     const apiMessages = history.map((m) => ({
       role: m.role,
       content: m.content,

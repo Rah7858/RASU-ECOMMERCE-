@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState("All");
+  const { t } = useTranslation();
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) =>
@@ -87,7 +89,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                 transition={{ delay: 0.1 }}
                 className="text-xl font-semibold"
               >
-                Filters
+                {t("shop.filters")}
               </motion.h2>
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
@@ -111,7 +113,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                   onClick={() => toggleSection("price")}
                   className="flex items-center justify-between w-full py-2"
                 >
-                  <span className="font-medium">Price Range</span>
+                  <span className="font-medium">{t("shop.filter_price")}</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
                       openSections.includes("price") ? "rotate-180" : ""
@@ -130,7 +132,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                       <div className="pt-4 space-y-4">
                         <div className="flex items-center gap-4">
                           <div className="flex-1">
-                            <label className="text-xs text-muted-foreground mb-1 block">Min (₹)</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t("shop.filter_min")}</label>
                             <input
                               type="number"
                               value={priceRange[0]}
@@ -140,7 +142,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                           </div>
                           <div className="pt-5">—</div>
                           <div className="flex-1">
-                            <label className="text-xs text-muted-foreground mb-1 block">Max (₹)</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t("shop.filter_max")}</label>
                             <input
                               type="number"
                               value={priceRange[1]}
@@ -195,7 +197,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                   onClick={() => toggleSection("category")}
                   className="flex items-center justify-between w-full py-2"
                 >
-                  <span className="font-medium">Category</span>
+                  <span className="font-medium">{t("shop.filter_category")}</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
                       openSections.includes("category") ? "rotate-180" : ""
@@ -243,7 +245,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                   onClick={() => toggleSection("size")}
                   className="flex items-center justify-between w-full py-2"
                 >
-                  <span className="font-medium">Size</span>
+                  <span className="font-medium">{t("shop.filter_size")}</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
                       openSections.includes("size") ? "rotate-180" : ""
@@ -291,7 +293,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                   onClick={() => toggleSection("color")}
                   className="flex items-center justify-between w-full py-2"
                 >
-                  <span className="font-medium">Color</span>
+                  <span className="font-medium">{t("shop.filter_color")}</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
                       openSections.includes("color") ? "rotate-180" : ""
@@ -354,7 +356,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                   }}
                   className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-muted transition-colors"
                 >
-                  Clear All
+                  {t("shop.filter_clear")}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -367,7 +369,7 @@ export function FilterSidebar({ isOpen, onClose, priceRange, onPriceRangeChange 
                     animate={{ x: ["-100%", "100%"] }}
                     transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
                   />
-                  <span className="relative z-10">Apply Filters</span>
+                  <span className="relative z-10">{t("shop.filter_apply")}</span>
                 </motion.button>
               </div>
             </div>

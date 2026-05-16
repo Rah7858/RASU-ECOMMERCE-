@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, useInView, AnimatePresence } from "fra
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 const categories = [
   {
@@ -54,7 +54,7 @@ const categories = [
 export function CategoriesSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -116,7 +116,7 @@ export function CategoriesSection() {
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              {t("categories.browse")}
+              {t("home.categories")}
             </motion.span>
           </motion.span>
           
@@ -127,7 +127,7 @@ export function CategoriesSection() {
               transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
             >
-              {t("categories.title")}
+              {t("home.categories")}
             </motion.h2>
           </div>
         </motion.div>
@@ -180,6 +180,7 @@ function ParallaxCard({ children, index, isInView }: { children: React.ReactNode
 }
 
 function CategoryCard({ category, index }: { category: typeof categories[0]; index: number }) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -323,7 +324,7 @@ function CategoryCard({ category, index }: { category: typeof categories[0]; ind
                   whileHover={{ x: 5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {category.name}
+                  {t(`nav.${category.name.toLowerCase()}`)}
                 </motion.h3>
                 <motion.p
                   initial={{ opacity: 0 }}

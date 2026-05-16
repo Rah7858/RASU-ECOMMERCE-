@@ -4,10 +4,10 @@ import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSp
 import { Search, ShoppingBag, User, Menu, X, Heart } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { SearchCommand } from "./SearchCommand";
-import { LanguageSelector } from "./LanguageSelector";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 
 // Magnetic effect hook
@@ -38,6 +38,7 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ profileImage?: string; name?: string } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
@@ -45,7 +46,17 @@ export function Navbar() {
   const navBlur = useTransform(scrollY, [0, 100], [0, 20]);
   const { wishlistCount } = useWishlist();
   const { totalItems } = useCart();
-  const { t } = useLanguage();
+  const { t, i18n } = useTranslation();
+
+  const languages = [
+    { code: 'en', label: 'EN', flag: '🇬🇧' },
+    { code: 'hi', label: 'हिं', flag: '🇮🇳' }
+  ];
+
+  const changeLanguage = (code: string) => {
+    i18n.changeLanguage(code);
+    localStorage.setItem('rasu_language', code);
+  };
 
   const navLinks = [
     { name: t("nav.shop"), href: "/shop" },
@@ -68,7 +79,16 @@ export function Navbar() {
 
   useEffect(() => {
     const syncAuthState = () => {
-      setIsAuthenticated(Boolean(localStorage.getItem("rasu_token") && localStorage.getItem("rasu_user")));
+      const token = localStorage.getItem("rasu_token");
+      const userStr = localStorage.getItem("rasu_user");
+      setIsAuthenticated(Boolean(token && userStr));
+      if (userStr) {
+        try {
+          setUserProfile(JSON.parse(userStr));
+        } catch {}
+      } else {
+        setUserProfile(null);
+      }
     };
 
     syncAuthState();
@@ -197,23 +217,7 @@ export function Navbar() {
 
               {/* Action Icons with staggered animation */}
               <div className="flex items-center gap-1 md:gap-2">
-                {/* Search Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="hidden sm:block"
-                >
-                  <motion.button
-                    onClick={() => setIsSearchOpen(true)}
-                    aria-label="Search"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative p-2 sm:p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
-                  >
-                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </motion.button>
-                </motion.div>
+                {/* Search Button removed for Bug 5 */}
 
                 {[
                   { icon: Heart, label: "Wishlist", href: "/wishlist", badge: wishlistCount > 0 ? String(wishlistCount) : undefined, hideOnMobile: true },
@@ -246,9 +250,23 @@ export function Navbar() {
                       }
                     }}
                     aria-label="Account"
-                    className="relative p-2 sm:p-3 rounded-xl hover:bg-muted/50 transition-all duration-300"
+                    className="relative p-2 sm:p-3 rounded-xl hover:bg-muted/50 transition-all duration-300 flex items-center justify-center"
                   >
-                    <User className="w-5 h-5" />
+                    {isAuthenticated && userProfile ? (
+                      userProfile.profileImage ? (
+                        <img 
+                          src={userProfile.profileImage} 
+                          alt={userProfile.name} 
+                          className="w-6 h-6 rounded-full object-cover border border-primary/20" 
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold border border-primary/20">
+                          {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                      )
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
                   </button>
                 </motion.div>
 
@@ -263,9 +281,26 @@ export function Navbar() {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.75, type: "spring" }}
-                  className="hidden lg:block"
+                  className="hidden lg:block relative group"
                 >
-                  <LanguageSelector variant="navbar" />
+                  <button className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-muted/50 transition-colors text-sm font-medium">
+                    <span className="text-lg">{languages.find(l => l.code === i18n.language || l.code === 'en')?.flag}</span>
+                    <span className="uppercase">{languages.find(l => l.code === i18n.language || l.code === 'en')?.label}</span>
+                  </button>
+                  <div className="absolute top-full right-0 mt-1 w-32 bg-popover border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-muted ${
+                          i18n.language === lang.code ? 'text-primary font-bold bg-primary/5' : 'text-foreground/80'
+                        }`}
+                      >
+                        <span className="mr-2 text-lg">{lang.flag}</span>
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
                 </motion.div>
 
                 <motion.div

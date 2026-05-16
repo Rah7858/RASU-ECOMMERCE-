@@ -123,6 +123,12 @@ export function AIOutfitBuilder({
       }
     }
 
+    if (!API_KEY) {
+      setError("AI Stylist is warming up, try again in a moment! ✨");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
