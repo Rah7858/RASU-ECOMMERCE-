@@ -108,7 +108,10 @@ export function AISizeRecommender({
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) throw new Error("API error");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "API error");
+      }
 
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -130,8 +133,12 @@ export function AISizeRecommender({
         setError("Check your connection and try again.");
       } else if (err?.message === "Parse error" || err?.message === "Invalid size") {
         setError("Could not determine size. Please check our size guide.");
+      } else if (err?.message && err.message.includes("API key")) {
+        setError(`AI Error: ${err.message}`);
+      } else if (err?.message === "API error") {
+        setError("Gemini API Key Expired or Invalid. Please update VITE_GEMINI_API_KEY in Vercel.");
       } else {
-        setError("Our AI stylist is busy, try again!");
+        setError(err?.message || "Our AI stylist is busy, try again!");
       }
     } finally {
       setIsLoading(false);

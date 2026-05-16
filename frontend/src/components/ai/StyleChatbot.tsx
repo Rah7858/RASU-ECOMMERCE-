@@ -103,7 +103,10 @@ export function StyleChatbot() {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) throw new Error("API error");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "API error");
+      }
 
       const data = await response.json();
       return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "Let me help you find the perfect RASU look!";
@@ -115,7 +118,13 @@ export function StyleChatbot() {
       if (!navigator.onLine) {
         return "Check your connection and try again!";
       }
-      return "Our AI stylist is busy, try again! ✨";
+      if (err?.message && err.message.includes("API key")) {
+        return `AI Error: ${err.message}`;
+      }
+      if (err?.message === "API error") {
+        return "Gemini API Key Expired or Invalid. Please update VITE_GEMINI_API_KEY in Vercel.";
+      }
+      return err?.message || "Our AI stylist is busy, try again! ✨";
     }
   }, []);
 

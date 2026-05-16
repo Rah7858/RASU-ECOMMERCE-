@@ -164,6 +164,8 @@ const ProductDetail = () => {
                   src={productImages[selectedImage]}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
                 />
               </motion.div>
               {productImages.length > 1 && (
@@ -176,7 +178,7 @@ const ProductDetail = () => {
                         selectedImage === index ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'
                       }`}
                     >
-                      <img loading="lazy" src={img} alt={`${product.name} view ${index + 1}`} className="w-full h-full object-cover" />
+                      <img loading="lazy" src={img} alt={`${product.name} view ${index + 1}`} className="w-full h-full object-cover" crossOrigin="anonymous" referrerPolicy="no-referrer" />
                     </button>
                   ))}
                 </div>

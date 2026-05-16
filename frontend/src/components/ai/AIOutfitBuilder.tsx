@@ -168,7 +168,10 @@ Please suggest 2 complementary items to complete this outfit.`;
       ]);
 
       clearTimeout(timeoutId);
-      if (!response.ok) throw new Error("API error");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || "API error");
+      }
 
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -190,8 +193,12 @@ Please suggest 2 complementary items to complete this outfit.`;
         setError("Our AI stylist is busy, try again!");
       } else if (!navigator.onLine) {
         setError("Check your connection and try again.");
+      } else if (err?.message && err.message.includes("API key")) {
+        setError(`AI Error: ${err.message}`);
+      } else if (err?.message === "API error") {
+        setError("Gemini API Key Expired or Invalid. Please update VITE_GEMINI_API_KEY in Vercel.");
       } else {
-        setError("Our AI stylist is busy, try again!");
+        setError(err?.message || "Our AI stylist is busy, try again!");
       }
     } finally {
       setIsLoading(false);
