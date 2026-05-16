@@ -7,6 +7,7 @@ import { SearchCommand } from "./SearchCommand";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "./LanguageSelector";
 
 
 // Magnetic effect hook
@@ -45,17 +46,7 @@ export function Navbar() {
   const navBlur = useTransform(scrollY, [0, 100], [0, 20]);
   const { wishlistCount } = useWishlist();
   const { totalItems } = useCart();
-  const { t, i18n } = useTranslation();
-
-  const languages = [
-    { code: 'en', label: 'EN', flag: '🇬🇧' },
-    { code: 'hi', label: 'हिं', flag: '🇮🇳' }
-  ];
-
-  const changeLanguage = (code: string) => {
-    i18n.changeLanguage(code);
-    localStorage.setItem('rasu_language', code);
-  };
+  const { t } = useTranslation();
 
   const navLinks = [
     { name: t("nav.shop"), href: "/shop" },
@@ -280,26 +271,9 @@ export function Navbar() {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.75, type: "spring" }}
-                  className="hidden lg:block relative group"
+                  className="hidden lg:block"
                 >
-                  <button className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-muted/50 transition-colors text-sm font-medium">
-                    <span className="text-lg">{languages.find(l => l.code === i18n.language || l.code === 'en')?.flag}</span>
-                    <span className="uppercase">{languages.find(l => l.code === i18n.language || l.code === 'en')?.label}</span>
-                  </button>
-                  <div className="absolute top-full right-0 mt-1 w-32 bg-popover border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-muted ${
-                          i18n.language === lang.code ? 'text-primary font-bold bg-primary/5' : 'text-foreground/80'
-                        }`}
-                      >
-                        <span className="mr-2 text-lg">{lang.flag}</span>
-                        {lang.label}
-                      </button>
-                    ))}
-                  </div>
+                  <LanguageSelector variant="navbar" />
                 </motion.div>
 
                 <motion.div

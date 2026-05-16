@@ -128,7 +128,7 @@ export default function Checkout() {
           pincode: formData.pincode,
         },
         phone: formData.phone,
-        paymentMethod: paymentMethods.find((p) => p.id === selectedPayment)?.name || "Cash on Delivery",
+        paymentMethod: selectedPayment === "cod" ? "COD" : selectedPayment === "upi" ? "UPI" : "RAZORPAY",
         totalAmount: orderTotal,
       };
 

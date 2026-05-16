@@ -1030,6 +1030,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setCurrentLanguage(lang);
+    // Sync with react-i18next so all t() translations update globally
+    try {
+      const i18n = require('../i18n/config').default;
+      i18n.changeLanguage(lang.code);
+    } catch {
+      // i18n not available yet, ignore
+    }
+    localStorage.setItem('rasu_language', lang.code);
   };
 
   const t = (key: TranslationKey): string => {
