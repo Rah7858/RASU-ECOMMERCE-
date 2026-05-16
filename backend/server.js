@@ -50,6 +50,11 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'RASU API Running' });
 });
 
+// Health Route
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'RASU API Running' });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);

@@ -57,7 +57,7 @@ RASU is a premium, futuristic streetwear e-commerce platform blending high-end f
 | **AI** | Google Gemini API (2.5 Flash) |
 | **3D / Animations** | Three.js, Framer Motion |
 | **Payments** | Razorpay (Test Mode Integration) |
-| **Deployment** | Vercel (Frontend), Railway (Backend) |
+| **Deployment** | Vercel (Frontend), Render (Backend) |
 
 ## 📸 Screenshots
 
@@ -152,7 +152,7 @@ VITE_RAZORPAY_KEY_ID=
    - Add the necessary Environment Variables.
    - Deploy.
 
-2. **Backend (Railway / Render)**:
+2. **Backend (Render)**:
    - Connect repository.
    - Specify Root Directory as `backend/`.
    - Add MongoDB connection string and JWT Secrets to Environment Variables.
