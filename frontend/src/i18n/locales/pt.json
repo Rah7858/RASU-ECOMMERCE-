@@ -62,6 +62,12 @@
     "out_of_stock": "Out of Stock",
     "in_stock": "In Stock"
   },
+  "products": {
+    "title": "Featured Products",
+    "featured": "Featured",
+    "viewAll": "View All",
+    "addToCart": "Add to Cart"
+  },
   "cart": {
     "title": "Carrinho",
     "empty": "Carrinho vazio",
@@ -188,7 +194,9 @@
     "search": "Search",
     "close": "Close",
     "view_all": "View All →",
-    "continue_shopping": "Continuar Comprando"
+    "continue_shopping": "Continuar Comprando",
+    "new": "New",
+    "sale": "Sale"
   },
   "wishlist": {
     "title": "My Wishlist",

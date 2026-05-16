@@ -62,6 +62,12 @@
     "out_of_stock": "Out of Stock",
     "in_stock": "In Stock"
   },
+  "products": {
+    "title": "Featured Products",
+    "featured": "Featured",
+    "viewAll": "View All",
+    "addToCart": "Add to Cart"
+  },
   "cart": {
     "title": "장바구니",
     "empty": "장바구니가 비어있습니다",
@@ -188,7 +194,9 @@
     "search": "Search",
     "close": "Close",
     "view_all": "View All →",
-    "continue_shopping": "쇼핑 계속하기"
+    "continue_shopping": "쇼핑 계속하기",
+    "new": "New",
+    "sale": "Sale"
   },
   "wishlist": {
     "title": "My Wishlist",

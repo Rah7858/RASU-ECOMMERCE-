@@ -59,8 +59,14 @@
     "related": "आपको यह भी पसंद आ सकता है",
     "recently_viewed": "हाल ही में देखे गए",
     "only_left": "केवल {{count}} बचे!",
-    "out_of_stock": "स्टॉक में नहीं",
-    "in_stock": "स्टॉक में है"
+    "out_of_stock": "स्टॉक से बाहर",
+    "in_stock": "स्टॉक में"
+  },
+  "products": {
+    "title": "विशेष उत्पाद",
+    "featured": "विशेष",
+    "viewAll": "सभी देखें",
+    "addToCart": "कार्ट में डालें"
   },
   "cart": {
     "title": "आपका कार्ट",
@@ -189,7 +195,9 @@
     "search": "खोजें",
     "close": "बंद करें",
     "view_all": "सभी देखें →",
-    "continue_shopping": "खरीदारी जारी रखें"
+    "continue_shopping": "खरीदारी जारी रखें",
+    "new": "नया",
+    "sale": "सेल"
   },
   "profile": {
     "title": "मेरी प्रोफ़ाइल",

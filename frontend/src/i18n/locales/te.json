@@ -62,6 +62,12 @@
     "out_of_stock": "Out of Stock",
     "in_stock": "In Stock"
   },
+  "products": {
+    "title": "Featured Products",
+    "featured": "Featured",
+    "viewAll": "View All",
+    "addToCart": "Add to Cart"
+  },
   "cart": {
     "title": "కార్ట్",
     "empty": "కార్ట్ ఖాళీగా ఉంది",
@@ -188,7 +194,9 @@
     "search": "Search",
     "close": "Close",
     "view_all": "View All →",
-    "continue_shopping": "కొనుగోలు కొనసాగించండి"
+    "continue_shopping": "కొనుగోలు కొనసాగించండి",
+    "new": "New",
+    "sale": "Sale"
   },
   "wishlist": {
     "title": "My Wishlist",
