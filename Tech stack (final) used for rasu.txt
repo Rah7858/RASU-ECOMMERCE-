@@ -17,5 +17,3 @@ Payment gateway (Stripe demo integration).
 Language selection with react-i18next (Hindi/English, more later).
 
 Production configs via .env.
-
-2. Folder Structure (copy this
