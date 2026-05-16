@@ -67,7 +67,7 @@ export function AISizeRecommender({
     }
 
     if (!API_KEY) {
-      setError("AI Stylist is warming up, try again in a moment! ✨");
+      setError("Please add VITE_GEMINI_API_KEY to Vercel environment variables");
       setIsLoading(false);
       return;
     }

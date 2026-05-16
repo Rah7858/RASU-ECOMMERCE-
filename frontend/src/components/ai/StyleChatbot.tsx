@@ -64,7 +64,7 @@ export function StyleChatbot() {
 
   const callClaude = useCallback(async (userMessage: string, history: Message[]) => {
     if (!API_KEY) {
-      return "AI Stylist is warming up, try again in a moment! ✨";
+      return "Please add VITE_GEMINI_API_KEY to Vercel environment variables";
     }
 
     const apiMessages = history.map((m) => ({
