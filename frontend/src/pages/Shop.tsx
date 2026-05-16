@@ -75,6 +75,8 @@ export default function Shop() {
         url += `gender=${activeCategory}&`;
       } else if (activeCategory === "accessories") {
         url += `gender=unisex&`;
+      } else if (activeCategory === "trending") {
+        url += `category=trending&`;
       }
       
       if (debouncedSearch) {
