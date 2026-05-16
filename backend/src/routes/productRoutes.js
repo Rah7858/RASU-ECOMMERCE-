@@ -12,8 +12,12 @@ router.get('/', async (req, res) => {
     const { gender, category, ageGroup, occasion, search } = req.query;
     const filter = { isActive: true };
 
-    if (gender) filter.gender = gender;
-    if (category) filter.category = category;
+    if (gender) {
+      filter.gender = { $regex: new RegExp(`^${gender}$`, 'i') };
+    }
+    if (category) {
+      filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+    }
     if (ageGroup) filter.ageGroup = ageGroup;
     if (occasion) filter.occasion = occasion;
     if (search) {
