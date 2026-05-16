@@ -77,7 +77,9 @@
     "coupon_placeholder": "कूपन कोड डालें",
     "apply_coupon": "लागू करें",
     "coupon_success": "कूपन लागू! आपने {{amount}} बचाए",
-    "coupon_error": "अमान्य कूपन कोड"
+    "coupon_error": "अमान्य कूपन कोड",
+    "item_size": "साइज़",
+    "item_color": "रंग"
   },
   "checkout": {
     "title": "चेकआउट",
@@ -188,5 +190,23 @@
     "close": "बंद करें",
     "view_all": "सभी देखें →",
     "continue_shopping": "खरीदारी जारी रखें"
+  },
+  "profile": {
+    "title": "मेरी प्रोफ़ाइल",
+    "logout": "लॉगआउट",
+    "upload_photo": "फोटो अपलोड करें",
+    "personal_info": "व्यक्तिगत जानकारी",
+    "save_changes": "परिवर्तन सहेजें",
+    "wishlist": "विशलिस्ट",
+    "orders": "मेरे ऑर्डर"
+  },
+  "wishlist": {
+    "title": "मेरी विशलिस्ट",
+    "item_singular": "आइटम",
+    "item_plural": "आइटम",
+    "clear_all": "सभी हटाएं",
+    "empty": "आपकी विशलिस्ट खाली है",
+    "empty_sub": "हार्ट आइकन पर क्लिक करके अपने पसंदीदा आइटम जोड़ना शुरू करें",
+    "browse": "उत्पाद ब्राउज़ करें"
   }
 }

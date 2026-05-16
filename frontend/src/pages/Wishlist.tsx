@@ -8,10 +8,12 @@ import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Product } from "@/data/products";
+import { useTranslation } from "react-i18next";
 
 export default function Wishlist() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addItem } = useCart();
+  const { t } = useTranslation();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -57,7 +59,7 @@ export default function Wishlist() {
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Continue Shopping</span>
+              <span>{t("common.continue_shopping")}</span>
             </Link>
 
             <div className="flex items-center justify-between">
@@ -66,9 +68,9 @@ export default function Wishlist() {
                   <Heart className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold">My Wishlist</h1>
+                  <h1 className="text-3xl md:text-4xl font-bold">{t("wishlist.title")}</h1>
                   <p className="text-muted-foreground">
-                    {wishlist.length} {wishlist.length === 1 ? "item" : "items"} saved
+                    {wishlist.length} {wishlist.length === 1 ? t("wishlist.item_singular") : t("wishlist.item_plural")}
                   </p>
                 </div>
               </div>
@@ -84,7 +86,7 @@ export default function Wishlist() {
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Clear All
+                  {t("wishlist.clear_all")}
                 </Button>
               )}
             </div>
@@ -101,14 +103,14 @@ export default function Wishlist() {
                 <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-6">
                   <Heart className="w-12 h-12 text-muted-foreground" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">Your wishlist is empty</h2>
+                <h2 className="text-2xl font-semibold mb-2">{t("wishlist.empty")}</h2>
                 <p className="text-muted-foreground mb-8">
-                  Start adding items you love by clicking the heart icon
+                  {t("wishlist.empty_sub")}
                 </p>
                 <Link to="/shop">
                   <Button size="lg" className="gap-2">
                     <ShoppingBag className="w-5 h-5" />
-                    Browse Products
+                    {t("wishlist.browse")}
                   </Button>
                 </Link>
               </motion.div>
@@ -185,7 +187,7 @@ export default function Wishlist() {
                         size="sm"
                       >
                         <ShoppingBag className="w-4 h-4" />
-                        Add to Cart
+                        {t("shop.add_to_cart")}
                       </Button>
                     </div>
                   </motion.div>

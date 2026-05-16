@@ -8,7 +8,8 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { Product } from "@/data/products";
 import { toast } from "sonner";
-import { useLanguage, translateProductName } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
+import { formatPrice } from "@/utils/format";
 
 interface ProductCardProps {
   product: Product;
@@ -19,9 +20,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const [show3D, setShow3D] = useState(false);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addItem, setIsOpen } = useCart();
-  const { t } = useLanguage();
+  const { t, i18n } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
-  const translatedName = translateProductName(product.name, t);
+  const translatedName = product.name;
   
   // 3D tilt effect
   const mouseX = useMotionValue(0);
@@ -71,13 +72,6 @@ export function ProductCard({ product }: ProductCardProps) {
     setIsOpen(true);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   return (
     <Link to={`/product/${product.id}`} className="group block h-full perspective-1000">
@@ -240,7 +234,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
               />
               <ShoppingBag className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">{t("products.addToCart")}</span>
+              <span className="relative z-10">{t("shop.add_to_cart")}</span>
             </motion.button>
           </motion.div>
         </div>
@@ -274,10 +268,10 @@ export function ProductCard({ product }: ProductCardProps) {
             animate={{ x: isHovered ? 3 : 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+            <span className="text-lg font-bold">{formatPrice(product.price, i18n.language)}</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(product.originalPrice, i18n.language)}
               </span>
             )}
           </motion.div>

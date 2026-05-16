@@ -12,8 +12,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, ProtectedRoute } from "@/contexts/AuthContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { LiveChatWidget } from "@/components/LiveChatWidget";
-import { lazy as lazyLoad } from "react";
-const StyleChatbot = lazyLoad(() =>
+const StyleChatbot = lazy(() =>
   import("@/components/ai/StyleChatbot").then((m) => ({ default: m.StyleChatbot }))
 );
 

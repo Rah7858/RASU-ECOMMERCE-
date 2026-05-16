@@ -77,7 +77,9 @@
     "coupon_placeholder": "Enter coupon code",
     "apply_coupon": "Apply",
     "coupon_success": "Coupon applied! You save {{amount}}",
-    "coupon_error": "Invalid coupon code"
+    "coupon_error": "Invalid coupon code",
+    "item_size": "Size",
+    "item_color": "Color"
   },
   "checkout": {
     "title": "Checkout",
@@ -188,5 +190,23 @@
     "close": "Close",
     "view_all": "View All →",
     "continue_shopping": "Continue Shopping"
+  },
+  "profile": {
+    "title": "My Profile",
+    "logout": "Logout",
+    "upload_photo": "Upload Photo",
+    "personal_info": "Personal Information",
+    "save_changes": "Save Changes",
+    "wishlist": "Wishlist",
+    "orders": "My Orders"
+  },
+  "wishlist": {
+    "title": "My Wishlist",
+    "item_singular": "item",
+    "item_plural": "items",
+    "clear_all": "Clear All",
+    "empty": "Your wishlist is empty",
+    "empty_sub": "Start adding items you love by clicking the heart icon",
+    "browse": "Browse Products"
   }
 }

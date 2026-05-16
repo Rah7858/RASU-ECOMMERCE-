@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Share2, Star, Minus, Plus, ShoppingBag, Check, Truck, Shield, RotateCcw, Sparkles } from 'lucide-react';
@@ -37,6 +37,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
+  const reviewCount = useMemo(() => Math.floor(Math.random() * 200 + 50), [product?.id]);
 
   // Product images - same image, different views
   const productImages = product ? [product.image] : [];
@@ -195,7 +196,7 @@ const ProductDetail = () => {
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {product.rating} ({Math.floor(Math.random() * 200 + 50)} reviews)
+                    {product.rating} ({reviewCount} reviews)
                   </span>
                 </div>
               </div>
@@ -388,11 +389,11 @@ const ProductDetail = () => {
                   </ul>
                 </TabsContent>
                 <TabsContent value="shipping" className="pt-6 text-muted-foreground">
-                  <p>Free standard shipping on orders over $100.</p>
+                  <p>Free standard shipping on orders over ₹999.</p>
                   <ul className="mt-4 space-y-2">
                     <li>• Standard: 5-7 business days</li>
-                    <li>• Express: 2-3 business days (+$15)</li>
-                    <li>• Next Day: 1 business day (+$25)</li>
+                    <li>• Express: 2-3 business days (+₹199)</li>
+                    <li>• Next Day: 1 business day (+₹399)</li>
                   </ul>
                 </TabsContent>
               </Tabs>

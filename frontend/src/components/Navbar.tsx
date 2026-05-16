@@ -6,7 +6,6 @@ import { ThemeToggle } from "./ThemeToggle";
 import { SearchCommand } from "./SearchCommand";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "react-i18next";
 
 

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Github, Linkedin, Globe, Mail, ExternalLink } from "lucide-react";
 import rasuLogo from "@/assets/rasu-logo.png";
 import { LanguageSelector } from "./LanguageSelector";
+import { useTranslation } from "react-i18next";
 import { useTypewriter } from "@/hooks/useTypewriter";
 
 const DEVELOPER = {
@@ -61,6 +62,7 @@ const TYPING_PHRASES = [
 ];
 
 function FooterInner() {
+  const { t } = useTranslation();
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const typedText = useTypewriter(TYPING_PHRASES, {
     typeSpeed: 50,
@@ -78,7 +80,7 @@ function FooterInner() {
               <img loading="lazy" src={rasuLogo} alt="RASU" className="h-12 dark:invert" />
             </Link>
             <p className="text-muted-foreground max-w-sm mb-6">
-              Redefining fashion with futuristic designs. Premium streetwear for the modern visionary.
+              {t("home.hero_subtitle")}
             </p>
 
             {/* Social Links */}
@@ -183,7 +185,7 @@ function FooterInner() {
                 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200"
             >
               <Github className="w-4 h-4" />
-              View Source
+              {t("common.view_source", "View Source")}
               <ExternalLink className="w-3.5 h-3.5" />
             </motion.a>
           </div>
@@ -191,11 +193,11 @@ function FooterInner() {
 
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© {currentYear} RASU. All rights reserved.</p>
+          <p>© {currentYear} RASU. {t("common.all_rights_reserved", "All rights reserved.")}</p>
           <div className="flex items-center gap-6">
             <LanguageSelector variant="footer" />
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">{t("footer.privacy_policy", "Privacy Policy")}</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">{t("footer.terms_of_service", "Terms of Service")}</Link>
           </div>
         </div>
       </div>

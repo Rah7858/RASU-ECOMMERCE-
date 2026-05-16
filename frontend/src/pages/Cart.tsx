@@ -105,7 +105,7 @@ export default function Cart() {
                         </h3>
                       </Link>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Size: {item.size} • Color: {item.color}
+                        {t("cart.item_size")}: {item.size} • {t("cart.item_color")}: {item.color}
                       </p>
                       <p className="text-lg font-bold mt-2">
                         {formatPrice(item.price)}
